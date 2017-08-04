@@ -1,0 +1,9 @@
+package: github.com/yunify/qingcloud-volume-provisioner
+import:
+- package: github.com/kubernetes-incubator/external-storage
+  version: 2a2fad20bb9169eb629477006863a90e0d0b9439
+  subpackages:
+  - lib/controller
+  - lib/leaderelection
+- package: github.com/yunify/qingcloud-sdk-go
+  version: v2.0.0-alpha.7
