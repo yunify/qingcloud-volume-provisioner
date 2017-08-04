@@ -3,17 +3,18 @@ package qingcloud_volume
 import (
 	"fmt"
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/cloudprovider/providers/qingcloud"
-	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/volume"
 	"strconv"
 	"strings"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
+	"github.com/kubernetes-incubator/external-storage/lib/controller"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/api/core/v1"
 )
 
 // Abstract interface to PD operations.
 type volumeManager interface {
-	CreateVolume(provisioner *qingcloudVolumeProvisioner) (volumeID string, volumeSizeGB int, err error)
+	CreateVolume(provisioner *qingcloudVolumeProvisioner, options controller.VolumeOptions) (volumeID string, volumeSizeGB int, err error)
 	DeleteVolume(deleter *qingcloudVolumeDeleter) error
 }
 
@@ -43,8 +44,8 @@ func (manager *QingVolumeManager) DeleteVolume(d *qingcloudVolumeDeleter) error 
 
 // CreateVolume creates a qingcloud volume.
 // Returns: volumeID, volumeSizeGB, error
-func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner) (string, int, error) {
-	glog.V(4).Infof("QingVolumeManager CreateVolume called, options: [%+v]", c.options)
+func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner, options controller.VolumeOptions) (string, int, error) {
+	glog.V(4).Infof("QingVolumeManager CreateVolume called, options: [%+v]", options)
 
 	var qc *qingcloud.QingCloud
 	var err error
@@ -52,7 +53,7 @@ func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner) (s
 		return "", 0, err
 	}
 
-	capacity := c.options.PVC.Spec.Resources.Requests[api.ResourceName(api.ResourceStorage)]
+	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	requestBytes := capacity.Value()
 	// qingcloud works with gigabytes, convert to GiB with rounding up
 	requestGB := int(volume.RoundUpSize(requestBytes, 1024*1024*1024))
@@ -62,7 +63,7 @@ func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner) (s
 	// the values to the cloud provider.
 	volType := sets.NewString("0", "2", "3")
 	hasSetType := false
-	for k, v := range c.options.Parameters {
+	for k, v := range options.Parameters {
 		switch strings.ToLower(k) {
 		case "type":
 			if !volType.Has(v) {
@@ -77,12 +78,13 @@ func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner) (s
 	}
 	//auto set volume type by instance class.
 	if !hasSetType {
-		selfInstance := qc.GetSelf()
-		if selfInstance.InstanceClass == nil || *selfInstance.InstanceClass == 0 {
-			volumeOptions.VolumeType = 0
-		}else {
-			volumeOptions.VolumeType = 3
-		}
+		//TODO
+		//selfInstance := qc.GetSelf()
+		//if selfInstance.InstanceClass == nil || *selfInstance.InstanceClass == 0 {
+		//	volumeOptions.VolumeType = 0
+		//}else {
+		//	volumeOptions.VolumeType = 3
+		//}
 		glog.V(2).Infof("Auto detected volume type: %v", volumeOptions.VolumeType)
 	}
 
@@ -117,10 +119,10 @@ func (manager *QingVolumeManager) CreateVolume(c *qingcloudVolumeProvisioner) (s
 	volumeOptions.CapacityGB = requestGB
 
 	// TODO: implement PVC.Selector parsing
-	if c.options.PVC.Spec.Selector != nil {
+	if options.PVC.Spec.Selector != nil {
 		return "", 0, fmt.Errorf("claim.Spec.Selector is not supported for dynamic provisioning on qingcloud")
 	}
-	volumeOptions.VolumeName = fmt.Sprintf("k8s-%s-%s-%s", c.options.ClusterName, c.options.PVC.Name, c.options.PVName)
+	volumeOptions.VolumeName = fmt.Sprintf("k8s-%s-%s", options.PVC.Name, options.PVName)
 	volumeID, err := qc.CreateVolume(volumeOptions)
 	if err != nil {
 		glog.V(2).Infof("Error creating qingcloud volume: %v", err)

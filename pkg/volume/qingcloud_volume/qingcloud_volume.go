@@ -1,19 +1,3 @@
-/*
-Copyright 2014 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package qingcloud_volume
 
 import (
@@ -23,26 +7,36 @@ import (
 
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/resource"
-	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/mount"
 	kstrings "k8s.io/kubernetes/pkg/util/strings"
 	"k8s.io/kubernetes/pkg/volume"
+	qcapi "github.com/yunify/qingcloud-volume-provisioner/pkg/volume/api"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"github.com/kubernetes-incubator/external-storage/lib/controller"
+	//"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // This is the primary entrypoint for volume plugins.
 func ProbeVolumePlugins() []volume.VolumePlugin {
-	return []volume.VolumePlugin{&qingcloudVolumePlugin{nil}}
+	//TODO
+	//return []volume.VolumePlugin{&qingcloudVolumePlugin{nil}}
+	return nil
 }
 
 type qingcloudVolumePlugin struct {
 	host volume.VolumeHost
 }
 
-var _ volume.VolumePlugin = &qingcloudVolumePlugin{}
-var _ volume.PersistentVolumePlugin = &qingcloudVolumePlugin{}
-var _ volume.DeletableVolumePlugin = &qingcloudVolumePlugin{}
-var _ volume.ProvisionableVolumePlugin = &qingcloudVolumePlugin{}
+var QingcloudVolumePlugin = &qingcloudVolumePlugin{}
+
+//TODO
+//var _ volume.VolumePlugin = &qingcloudVolumePlugin{}
+//var _ volume.PersistentVolumePlugin = &qingcloudVolumePlugin{}
+//var _ volume.DeletableVolumePlugin = &qingcloudVolumePlugin{}
+//var _ volume.ProvisionableVolumePlugin = &qingcloudVolumePlugin{}
 
 const (
 	qingcloudVolumePluginName = "kubernetes.io/qingcloud-volume"
@@ -72,12 +66,14 @@ func (plugin *qingcloudVolumePlugin) GetVolumeName(spec *volume.Spec) (string, e
 }
 
 func (plugin *qingcloudVolumePlugin) CanSupport(spec *volume.Spec) bool {
-	result := (spec.PersistentVolume != nil && spec.PersistentVolume.Spec.QingCloudStore != nil) ||
-		(spec.Volume != nil && spec.Volume.QingCloudStore != nil)
-	if glog.V(6) {
-		glog.Infof("qingcloudVolumePlugin CanSupport (%+v) , result: %v", spec, result)
-	}
-	return result
+	//result := (spec.PersistentVolume != nil && spec.PersistentVolume.Spec.QingCloudStore != nil) ||
+	//	(spec.Volume != nil && spec.Volume.QingCloudStore != nil)
+	//if glog.V(6) {
+	//	glog.Infof("qingcloudVolumePlugin CanSupport (%+v) , result: %v", spec, result)
+	//}
+	//return result
+	//TODO
+	return false
 }
 
 func (plugin *qingcloudVolumePlugin) RequiresRemount() bool {
@@ -138,46 +134,49 @@ func (plugin *qingcloudVolumePlugin) newUnmounterInternal(volName string, podUID
 }
 
 func (plugin *qingcloudVolumePlugin) NewDeleter(spec *volume.Spec) (volume.Deleter, error) {
-	return plugin.newDeleterInternal(spec, &QingVolumeManager{})
+	//return plugin.newDeleterInternal(spec, &QingVolumeManager{})
+	//TOOD
+	return nil,nil
 }
 
 func (plugin *qingcloudVolumePlugin) newDeleterInternal(spec *volume.Spec, manager volumeManager) (volume.Deleter, error) {
-	if spec.PersistentVolume != nil && spec.PersistentVolume.Spec.QingCloudStore == nil {
-		glog.Errorf("spec.PersistentVolumeSource.QingCloudStore is nil")
-		return nil, fmt.Errorf("spec.PersistentVolumeSource.QingCloudStore is nil")
-	}
+	//TODO
+	//if spec.PersistentVolume != nil && spec.PersistentVolume.Spec.QingCloudStore == nil {
+	//	glog.Errorf("spec.PersistentVolumeSource.QingCloudStore is nil")
+	//	return nil, fmt.Errorf("spec.PersistentVolumeSource.QingCloudStore is nil")
+	//}
 	return &qingcloudVolumeDeleter{
 		qingcloudVolume: &qingcloudVolume{
 			volName:  spec.Name(),
-			volumeID: spec.PersistentVolume.Spec.QingCloudStore.VolumeID,
+			//TODO
+			//volumeID: spec.PersistentVolume.Spec.QingCloudStore.VolumeID,
 			manager:  manager,
 			plugin:   plugin,
 		}}, nil
 }
 
-func (plugin *qingcloudVolumePlugin) NewProvisioner(options volume.VolumeOptions) (volume.Provisioner, error) {
-	glog.V(3).Infof("qingcloudVolumePlugin NewProvisioner(%+v) called", options)
-	return plugin.newProvisionerInternal(options, &QingVolumeManager{})
+func (plugin *qingcloudVolumePlugin) NewProvisioner() (controller.Provisioner, error) {
+	glog.V(3).Infof("qingcloudVolumePlugin NewProvisioner called")
+	return plugin.newProvisionerInternal(&QingVolumeManager{})
 }
 
-func (plugin *qingcloudVolumePlugin) newProvisionerInternal(options volume.VolumeOptions, manager volumeManager) (volume.Provisioner, error) {
+func (plugin *qingcloudVolumePlugin) newProvisionerInternal(manager volumeManager) (controller.Provisioner, error) {
 	return &qingcloudVolumeProvisioner{
 		qingcloudVolume: &qingcloudVolume{
 			manager: manager,
 			plugin:  plugin,
 		},
-		options: options,
 	}, nil
 }
 
 func getVolumeSource(
-	spec *volume.Spec) (*api.QingCloudStoreVolumeSource, bool, error) {
-	if spec.Volume != nil && spec.Volume.QingCloudStore != nil {
-		return spec.Volume.QingCloudStore, spec.Volume.QingCloudStore.ReadOnly, nil
-	} else if spec.PersistentVolume != nil &&
-		spec.PersistentVolume.Spec.QingCloudStore != nil {
-		return spec.PersistentVolume.Spec.QingCloudStore, spec.ReadOnly, nil
-	}
+	spec *volume.Spec) (*qcapi.QingCloudStoreVolumeSource, bool, error) {
+	//if spec.Volume != nil && spec.Volume.QingCloudStore != nil {
+	//	return spec.Volume.QingCloudStore, spec.Volume.QingCloudStore.ReadOnly, nil
+	//} else if spec.PersistentVolume != nil &&
+	//	spec.PersistentVolume.Spec.QingCloudStore != nil {
+	//	return spec.PersistentVolume.Spec.QingCloudStore, spec.ReadOnly, nil
+	//}
 
 	return nil, false, fmt.Errorf("Spec does not reference an qingcloud volume type")
 }
@@ -185,19 +184,23 @@ func getVolumeSource(
 func (plugin *qingcloudVolumePlugin) ConstructVolumeSpec(volName, mountPath string) (*volume.Spec, error) {
 	mounter := plugin.host.GetMounter()
 	pluginDir := plugin.host.GetPluginDir(plugin.GetPluginName())
-	sourceName, err := mounter.GetDeviceNameFromMount(mountPath, pluginDir)
+	//TODO
+	//sourceName
+	_, err := mounter.GetDeviceNameFromMount(mountPath, pluginDir)
 	if err != nil {
 		return nil, err
 	}
-	qingVolume := &api.Volume{
-		Name: volName,
-		VolumeSource: api.VolumeSource{
-			QingCloudStore: &api.QingCloudStoreVolumeSource{
-				VolumeID: sourceName,
-			},
-		},
-	}
-	return volume.NewSpecFromVolume(qingVolume), nil
+	//qingVolume := &v1.Volume{
+	//	Name: volName,
+	//	VolumeSource: v1.VolumeSource{
+	//		//QingCloudStore: &api.QingCloudStoreVolumeSource{
+	//		//	VolumeID: sourceName,
+	//		//},
+	//	},
+	//}
+	//TODO
+	return nil, nil
+	//return v1.Volume.NewSpecFromVolume(qingVolume), nil
 }
 
 // qingcloudVolume are volume resources provided by qingcloud
@@ -368,44 +371,50 @@ func (d *qingcloudVolumeDeleter) Delete() error {
 
 type qingcloudVolumeProvisioner struct {
 	*qingcloudVolume
-	options volume.VolumeOptions
 }
 
-var _ volume.Provisioner = &qingcloudVolumeProvisioner{}
+//var _ volume.Provisioner = &qingcloudVolumeProvisioner{}
 
-func (c *qingcloudVolumeProvisioner) Provision() (*api.PersistentVolume, error) {
-	volumeID, sizeGB, err := c.manager.CreateVolume(c)
+func (c *qingcloudVolumeProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
+	//volumeID,
+	_, sizeGB, err := c.manager.CreateVolume(c, options)
 	if err != nil {
 		glog.Errorf("Provision failed: %v", err)
 		return nil, err
 	}
 
-	pv := &api.PersistentVolume{
-		ObjectMeta: api.ObjectMeta{
-			Name: c.options.PVName,
+	pv := &v1.PersistentVolume{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: options.PVName,
 			Annotations: map[string]string{
 				"kubernetes.io/createdby": "qingcloud-volume-dynamic-provisioner",
 			},
 		},
-		Spec: api.PersistentVolumeSpec{
-			PersistentVolumeReclaimPolicy: c.options.PersistentVolumeReclaimPolicy,
-			AccessModes:                   c.options.PVC.Spec.AccessModes,
-			Capacity: api.ResourceList{
-				api.ResourceName(api.ResourceStorage): resource.MustParse(fmt.Sprintf("%dGi", sizeGB)),
+		Spec: v1.PersistentVolumeSpec{
+			PersistentVolumeReclaimPolicy: options.PersistentVolumeReclaimPolicy,
+			AccessModes:                   options.PVC.Spec.AccessModes,
+			Capacity: v1.ResourceList{
+				v1.ResourceName(v1.ResourceStorage): resource.MustParse(fmt.Sprintf("%dGi", sizeGB)),
 			},
-			PersistentVolumeSource: api.PersistentVolumeSource{
-				QingCloudStore: &api.QingCloudStoreVolumeSource{
-					VolumeID: volumeID,
-					FSType:   "ext4",
-					ReadOnly: false,
-				},
+			PersistentVolumeSource: v1.PersistentVolumeSource{
+				//QingCloudStore: &api.QingCloudStoreVolumeSource{
+				//	VolumeID: volumeID,
+				//	FSType:   "ext4",
+				//	ReadOnly: false,
+				//},
 			},
 		},
 	}
 
-	if len(c.options.PVC.Spec.AccessModes) == 0 {
-		pv.Spec.AccessModes = c.plugin.GetAccessModes()
+	if len(options.PVC.Spec.AccessModes) == 0 {
+		//TODO
+		//pv.Spec.AccessModes = c.plugin.GetAccessModes()
 	}
 
 	return pv, nil
+}
+
+func (c *qingcloudVolumeProvisioner) Delete(*v1.PersistentVolume) error{
+	//TODO
+	return nil
 }

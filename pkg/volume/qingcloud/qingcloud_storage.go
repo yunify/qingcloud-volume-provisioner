@@ -1,19 +1,3 @@
-/*
-Copyright 2016 The Kubernetes Authors All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package qingcloud
 
 // See https://docs.qingcloud.com/api/volume/index.html
@@ -25,6 +9,18 @@ import (
 	qcclient "github.com/yunify/qingcloud-sdk-go/client"
 	"github.com/golang/glog"
 )
+
+// A single Kubernetes cluster can run in multiple zones,
+// but only within the same region (and cloud provider).
+type QingCloud struct {
+	instanceService      *qcservice.InstanceService
+	lbService            *qcservice.LoadBalancerService
+	volumeService        *qcservice.VolumeService
+	jobService           *qcservice.JobService
+	securityGroupService *qcservice.SecurityGroupService
+	zone                 string
+	selfInstance         *qcservice.Instance
+}
 
 // DefaultMaxQingCloudVolumes is the limit for volumes attached to an instance.
 // TODO: No clear description from qingcloud document
@@ -183,7 +179,7 @@ func (qc *QingCloud)  DisksAreAttached(volumeIDs []string, instanceID string) (m
 		attached[volumeID] = false
 	}
 	output, err := qc.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
-		Volumes: stringArrayPtr(volumeIDs),
+		Volumes: qcservice.StringSlice(volumeIDs),
 	})
 	if err != nil {
 		return nil, err

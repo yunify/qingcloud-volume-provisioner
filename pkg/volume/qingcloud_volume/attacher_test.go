@@ -1,19 +1,3 @@
-/*
-Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package qingcloud_volume
 
 import (
@@ -21,11 +5,10 @@ import (
 	"testing"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/cloudprovider/providers/qingcloud"
-	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/volume"
 	volumetest "k8s.io/kubernetes/pkg/volume/testing"
+	"k8s.io/apimachinery/pkg/types"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 )
 
 func TestGetDeviceName_Volume(t *testing.T) {
@@ -168,7 +151,9 @@ func newPlugin() *qingcloudVolumePlugin {
 	plugins := ProbeVolumePlugins()
 	plugin := plugins[0]
 	plugin.Init(host)
-	return plugin.(*qingcloudVolumePlugin)
+	//return plugin.(*qingcloudVolumePlugin)
+	//TODO
+	return nil
 }
 
 func newAttacher(testcase *testcase) *qingcloudVolumeAttacher {
@@ -185,31 +170,33 @@ func newDetacher(testcase *testcase) *qingcloudVolumeDetacher {
 }
 
 func createVolSpec(name string, readOnly bool) *volume.Spec {
-	return &volume.Spec{
-		Volume: &api.Volume{
-			VolumeSource: api.VolumeSource{
-				QingCloudStore: &api.QingCloudStoreVolumeSource{
-					VolumeID: name,
-					ReadOnly: readOnly,
-				},
-			},
-		},
-	}
+	//return &volume.Spec{
+	//	Volume: &api.Volume{
+	//		VolumeSource: api.VolumeSource{
+	//			QingCloudStore: &api.QingCloudStoreVolumeSource{
+	//				VolumeID: name,
+	//				ReadOnly: readOnly,
+	//			},
+	//		},
+	//	},
+	//}
+	return nil
 }
 
 func createPVSpec(name string, readOnly bool) *volume.Spec {
-	return &volume.Spec{
-		PersistentVolume: &api.PersistentVolume{
-			Spec: api.PersistentVolumeSpec{
-				PersistentVolumeSource: api.PersistentVolumeSource{
-					QingCloudStore: &api.QingCloudStoreVolumeSource{
-						VolumeID: name,
-						ReadOnly: readOnly,
-					},
-				},
-			},
-		},
-	}
+	//return &volume.Spec{
+	//	PersistentVolume: &api.PersistentVolume{
+	//		Spec: api.PersistentVolumeSpec{
+	//			PersistentVolumeSource: api.PersistentVolumeSource{
+	//				QingCloudStore: &api.QingCloudStoreVolumeSource{
+	//					VolumeID: name,
+	//					ReadOnly: readOnly,
+	//				},
+	//			},
+	//		},
+	//	},
+	//}
+	return nil
 }
 
 // Fake qingcloud implementation
