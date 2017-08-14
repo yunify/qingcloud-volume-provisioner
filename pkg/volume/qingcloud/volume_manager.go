@@ -7,19 +7,16 @@ import (
 	"strings"
 	qcservice "github.com/yunify/qingcloud-sdk-go/service"
 	qcclient "github.com/yunify/qingcloud-sdk-go/client"
+	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	"github.com/golang/glog"
 )
 
-// A single Kubernetes cluster can run in multiple zones,
-// but only within the same region (and cloud provider).
-type QingCloud struct {
+type volumeManager struct {
 	instanceService      *qcservice.InstanceService
-	lbService            *qcservice.LoadBalancerService
 	volumeService        *qcservice.VolumeService
 	jobService           *qcservice.JobService
-	securityGroupService *qcservice.SecurityGroupService
 	zone                 string
-	selfInstance         *qcservice.Instance
+	defaultVolumeType	int
 }
 
 // DefaultMaxQingCloudVolumes is the limit for volumes attached to an instance.
@@ -35,7 +32,7 @@ type VolumeOptions struct {
 }
 
 // Volumes is an interface for managing cloud-provisioned volumes
-type Volumes interface {
+type VolumeManager interface {
 	// Attach the disk to the specified instance
 	// Returns the device (e.g. /dev/sdb) where we attached the volume
 	// It checks if volume is already attached to node and succeeds in that case.
@@ -57,10 +54,53 @@ type Volumes interface {
 
 	// Check if a list of volumes are attached to the node with the specified NodeName
 	DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error)
+
+	GetDefaultVolumeType() int
+}
+
+// newVolumeManager returns a new instance of QingCloudVolumeManager.
+func newVolumeManager(qcConfigPath string) (VolumeManager, error) {
+	qcConfig, err := qcconfig.NewDefault()
+	if err != nil {
+		return nil, err
+	}
+	if err = qcConfig.LoadConfigFromFilepath(qcConfigPath); err != nil {
+		return nil, err
+	}
+
+	qcService, err := qcservice.Init(qcConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	volumeService, err := qcService.Volume(qcConfig.Zone)
+	if err != nil {
+		return nil, err
+	}
+	jobService, err := qcService.Job(qcConfig.Zone)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultVolumeType, err := autoDetectedVolumeType(qcConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	qc := volumeManager{
+		volumeService:        volumeService,
+		jobService:           jobService,
+		zone:                 qcConfig.Zone,
+		defaultVolumeType:	defaultVolumeType,
+	}
+
+	glog.V(1).Infof("QingCloudVolumeManager init finish, zone: %v, defaultVolumeType: %v", qc.zone, qc.defaultVolumeType)
+
+	return &qc, nil
 }
 
 // AttachVolume implements Volumes.AttachVolume
-func (qc *QingCloud) AttachVolume(volumeID string, instanceID string) (string, error) {
+func (qc *volumeManager) AttachVolume(volumeID string, instanceID string) (string, error) {
 	glog.V(4).Infof("AttachVolume(%v,%v) called", volumeID, instanceID)
 
 	attached, err := qc.VolumeIsAttached(volumeID, instanceID)
@@ -102,7 +142,7 @@ func (qc *QingCloud) AttachVolume(volumeID string, instanceID string) (string, e
 }
 
 // DetachVolume implements Volumes.DetachVolume
-func (qc *QingCloud) DetachVolume(volumeID string, instanceID string) error {
+func (qc *volumeManager) DetachVolume(volumeID string, instanceID string) error {
 	glog.V(4).Infof("DetachVolume(%v,%v) called", volumeID, instanceID)
 
 	output, err := qc.volumeService.DetachVolumes(&qcservice.DetachVolumesInput{
@@ -118,7 +158,7 @@ func (qc *QingCloud) DetachVolume(volumeID string, instanceID string) error {
 }
 
 // CreateVolume implements Volumes.CreateVolume
-func (qc *QingCloud) CreateVolume(volumeOptions *VolumeOptions) (string, error) {
+func (qc *volumeManager) CreateVolume(volumeOptions *VolumeOptions) (string, error) {
 	glog.V(4).Infof("CreateVolume(%v) called", volumeOptions)
 
 	output, err := qc.volumeService.CreateVolumes(&qcservice.CreateVolumesInput{
@@ -135,7 +175,7 @@ func (qc *QingCloud) CreateVolume(volumeOptions *VolumeOptions) (string, error) 
 }
 
 // DeleteVolume implements Volumes.DeleteVolume
-func (qc *QingCloud) DeleteVolume(volumeID string) (bool, error) {
+func (qc *volumeManager) DeleteVolume(volumeID string) (bool, error) {
 	glog.V(4).Infof("DeleteVolume(%v) called", volumeID)
 
 	output, err := qc.volumeService.DeleteVolumes(&qcservice.DeleteVolumesInput{
@@ -155,7 +195,7 @@ func (qc *QingCloud) DeleteVolume(volumeID string) (bool, error) {
 }
 
 // VolumeIsAttached implements Volumes.VolumeIsAttached
-func (qc *QingCloud) VolumeIsAttached(volumeID string, instanceID string) (bool, error) {
+func (qc *volumeManager) VolumeIsAttached(volumeID string, instanceID string) (bool, error) {
 	glog.V(4).Infof("VolumeIsAttached(%v,%v) called", volumeID, instanceID)
 
 	output, err := qc.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
@@ -171,7 +211,7 @@ func (qc *QingCloud) VolumeIsAttached(volumeID string, instanceID string) (bool,
 	return *output.VolumeSet[0].Instance.InstanceID == instanceID, nil
 }
 
-func (qc *QingCloud)  DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error){
+func (qc *volumeManager)  DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error){
 	glog.V(4).Infof("DisksAreAttached(%v,%v) called", volumeIDs, instanceID)
 
 	attached := make(map[string]bool)
@@ -190,4 +230,8 @@ func (qc *QingCloud)  DisksAreAttached(volumeIDs []string, instanceID string) (m
 		}
 	}
 	return attached, nil
+}
+
+func (qc *volumeManager) GetDefaultVolumeType() int {
+	return qc.defaultVolumeType
 }
