@@ -18,7 +18,7 @@ package provisioner
 
 import (
 	"errors"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	//"github.com/kubernetes-incubator/external-storage/iscsi/targetd/provisioner/jsonrpc2"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
