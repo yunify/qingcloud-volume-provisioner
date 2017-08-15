@@ -4,12 +4,12 @@ package qingcloud
 
 import (
 	"fmt"
-	"strings"
-	qcservice "github.com/yunify/qingcloud-sdk-go/service"
+	"github.com/golang/glog"
 	qcclient "github.com/yunify/qingcloud-sdk-go/client"
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
-	"github.com/golang/glog"
+	qcservice "github.com/yunify/qingcloud-sdk-go/service"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"strings"
 )
 
 const (
@@ -67,11 +67,11 @@ type VolumeManager interface {
 }
 
 type volumeManager struct {
-	instanceService      *qcservice.InstanceService
-	volumeService        *qcservice.VolumeService
-	jobService           *qcservice.JobService
-	zone                 string
-	defaultVolumeType	VolumeType
+	instanceService   *qcservice.InstanceService
+	volumeService     *qcservice.VolumeService
+	jobService        *qcservice.JobService
+	zone              string
+	defaultVolumeType VolumeType
 }
 
 // newVolumeManager returns a new instance of QingCloudVolumeManager.
@@ -104,10 +104,10 @@ func newVolumeManager(qcConfigPath string) (VolumeManager, error) {
 	}
 
 	qc := volumeManager{
-		volumeService:        volumeService,
-		jobService:           jobService,
-		zone:                 qcConfig.Zone,
-		defaultVolumeType:	defaultVolumeType,
+		volumeService:     volumeService,
+		jobService:        jobService,
+		zone:              qcConfig.Zone,
+		defaultVolumeType: defaultVolumeType,
 	}
 
 	glog.V(1).Infof("QingCloudVolumeManager init finish, zone: %v, defaultVolumeType: %v", qc.zone, qc.defaultVolumeType)
@@ -126,7 +126,7 @@ func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (strin
 
 	if !attached {
 		output, err := vm.volumeService.AttachVolumes(&qcservice.AttachVolumesInput{
-			Volumes:[]*string{ &volumeID},
+			Volumes:  []*string{&volumeID},
 			Instance: &instanceID,
 		})
 		if err != nil {
@@ -162,7 +162,7 @@ func (vm *volumeManager) DetachVolume(volumeID string, instanceID string) error 
 	glog.V(4).Infof("DetachVolume(%v,%v) called", volumeID, instanceID)
 
 	output, err := vm.volumeService.DetachVolumes(&qcservice.DetachVolumesInput{
-		Volumes: []*string{&volumeID},
+		Volumes:  []*string{&volumeID},
 		Instance: &instanceID,
 	})
 	if err != nil {
@@ -227,7 +227,7 @@ func (vm *volumeManager) VolumeIsAttached(volumeID string, instanceID string) (b
 	return *output.VolumeSet[0].Instance.InstanceID == instanceID, nil
 }
 
-func (vm *volumeManager)  DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error){
+func (vm *volumeManager) DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error) {
 	glog.V(4).Infof("DisksAreAttached(%v,%v) called", volumeIDs, instanceID)
 
 	attached := make(map[string]bool)

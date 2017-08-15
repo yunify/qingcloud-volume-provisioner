@@ -1,14 +1,14 @@
 package qingcloud
 
 import (
-	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
-	"strings"
 	"github.com/golang/glog"
-	"time"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
+	"k8s.io/kubernetes/pkg/util/exec"
+	"k8s.io/kubernetes/pkg/util/mount"
 	volumeutil "k8s.io/kubernetes/pkg/volume/util"
 	"os"
-	"k8s.io/kubernetes/pkg/util/mount"
-	"k8s.io/kubernetes/pkg/util/exec"
+	"strings"
+	"time"
 )
 
 const (
@@ -17,8 +17,8 @@ const (
 	OptionFSType    = "kubernetes.io/fsType"
 	OptionReadWrite = "kubernetes.io/readwrite"
 
-	DefaultFSType   = "ext4"
-	DriverName      = "qingcloud/flex-volume"
+	DefaultFSType = "ext4"
+	DriverName    = "qingcloud/flex-volume"
 
 	DefaultQingCloudConfigPath = "/etc/qingcloud/client.yaml"
 )
@@ -27,7 +27,7 @@ type flexVolumePlugin struct {
 	manager VolumeManager
 }
 
-func NewFlexVolumePlugin() (flex.VolumePlugin, error){
+func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
 	manager, err := newVolumeManager(DefaultQingCloudConfigPath)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (*flexVolumePlugin) Init() flex.VolumeResult {
 }
 
 func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.VolumeResult {
-	volumeID,_ := options["volumeID"].(string)
+	volumeID, _ := options["volumeID"].(string)
 
 	// qingcloud.AttachVolume checks if disk is already attached to node and
 	// succeeds in that case, so no need to do that separately.
@@ -99,7 +99,7 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 }
 
 func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
-	volumeID,_ := options["volumeID"].(string)
+	volumeID, _ := options["volumeID"].(string)
 
 	if device == "" {
 		return flex.NewVolumeError("WaitForAttach failed for qingcloud Volume %q: device is empty.", volumeID)
@@ -126,7 +126,7 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 }
 
 func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeResult {
-	volumeID,_ := options["volumeID"].(string)
+	volumeID, _ := options["volumeID"].(string)
 	if volumeID == "" {
 		return flex.NewVolumeError("volumeID is required, options: %+v", options)
 	}
@@ -134,7 +134,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
-	volumeID,_ := options["volumeID"].(string)
+	volumeID, _ := options["volumeID"].(string)
 	r, err := p.manager.VolumeIsAttached(volumeID, node)
 
 	if err != nil {
@@ -142,5 +142,3 @@ func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) f
 	}
 	return flex.NewVolumeSuccess().WithAttached(r)
 }
-
-

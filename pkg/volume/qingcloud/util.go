@@ -1,14 +1,14 @@
 package qingcloud
 
 import (
-	"time"
-	qcservice "github.com/yunify/qingcloud-sdk-go/service"
-	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
+	"fmt"
 	"github.com/golang/glog"
+	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
+	qcservice "github.com/yunify/qingcloud-sdk-go/service"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"fmt"
 	"k8s.io/kubernetes/pkg/volume"
+	"time"
 )
 
 const (
@@ -34,15 +34,15 @@ func autoDetectedVolumeType(qcConfig *qcconfig.Config) (VolumeType, error) {
 			if ins != nil {
 				if ins.InstanceClass == nil || *ins.InstanceClass == 0 {
 					volumeType = VolumeTypeHP
-				}else {
+				} else {
 					volumeType = VolumeTypeSHP
 				}
 				glog.V(2).Infof("Auto detected volume type: %v", volumeType)
 			}
-		}else{
+		} else {
 			glog.Errorf("Get self instance fail, id: %s, err: %s", host, err.Error())
 		}
-	}else {
+	} else {
 		glog.Errorf("Get Hostname fail, id: %s, err: %s", host, err.Error())
 	}
 	return volumeType, nil
@@ -56,15 +56,14 @@ func getHostname() (string, error) {
 	return string(content), nil
 }
 
-
 // getInstanceByID get instance.Instance by instanceId
 func getInstanceByID(instanceID string, instanceService *qcservice.InstanceService) (*qcservice.Instance, error) {
 	status := []*string{qcservice.String("running")}
 	verbose := qcservice.Int(1)
 	output, err := instanceService.DescribeInstances(&qcservice.DescribeInstancesInput{
-		Instances: []*string{&instanceID},
-		Status:    status,
-		Verbose:   verbose,
+		Instances:     []*string{&instanceID},
+		Status:        status,
+		Verbose:       verbose,
 		IsClusterNode: qcservice.Int(1),
 	})
 	if err != nil {

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
+	"os"
 )
 
 // fatalf is a convenient method that outputs error in flex volume plugin style
@@ -61,7 +61,6 @@ func main() {
 	if err != nil {
 		fatalf("Error init FlexVolumePlugin")
 	}
-
 
 	args := flag.Args()
 	if len(args) == 0 {

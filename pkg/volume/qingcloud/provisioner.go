@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
+	"k8s.io/apimachinery/pkg/api/resource"
 	//"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 type VolumeType int
@@ -27,17 +27,15 @@ const (
 
 	// A PV annotation for the identity of the flexProvisioner that provisioned it
 	annProvisionerId = "Provisioner_Id"
-
 )
 
 func NewProvisioner(qcConfigPath string) (controller.Provisioner, error) {
-	manager,err := newVolumeManager(qcConfigPath)
+	manager, err := newVolumeManager(qcConfigPath)
 	if err != nil {
 		return nil, err
 	}
 	return &volumeProvisioner{manager: manager}, nil
 }
-
 
 type volumeProvisioner struct {
 	manager VolumeManager
@@ -61,7 +59,6 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	if !found {
 		return nil, fmt.Errorf("Qingcloud volume only supports ReadWriteOnce mounts")
 	}
-
 
 	volumeOptions := &VolumeOptions{}
 
@@ -89,7 +86,6 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	newCapacity, err := fixVolumeCapacity(capacity, volumeOptions.VolumeType)
 	volumeOptions.CapacityGB = int(newCapacity.ScaledValue(resource.Giga))
-
 
 	volumeOptions.VolumeName = fmt.Sprintf("k8s-%s-%s", options.PVC.Name, options.PVName)
 	volumeID, err := c.manager.CreateVolume(volumeOptions)
@@ -126,10 +122,10 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			StorageClassName: storageClassName,
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				FlexVolume: &v1.FlexVolumeSource{
-					Driver:    DriverName,
-					FSType:    DefaultFSType,
-					ReadOnly:  false,
-					Options:   flexVolumeConfig,
+					Driver:   DriverName,
+					FSType:   DefaultFSType,
+					ReadOnly: false,
+					Options:  flexVolumeConfig,
 				},
 			},
 		},
@@ -138,7 +134,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	return pv, nil
 }
 
-func (c *volumeProvisioner) Delete(volume *v1.PersistentVolume) error{
+func (c *volumeProvisioner) Delete(volume *v1.PersistentVolume) error {
 	if volume.Name == "" {
 		return fmt.Errorf("volume name cannot be empty %#v", volume)
 	}
@@ -148,7 +144,7 @@ func (c *volumeProvisioner) Delete(volume *v1.PersistentVolume) error{
 			return fmt.Errorf("volume [%s] not support by qingcloud-volume-provisioner", volume.Name)
 		}
 		volumeID := volume.Spec.PersistentVolumeSource.FlexVolume.Options["volumeID"]
-		if volumeID == ""{
+		if volumeID == "" {
 			return fmt.Errorf("Spec.PersistentVolumeSource.FlexVolume.Options[\"volumeID\"]  cannot be empty %#v", volume)
 		}
 		_, err := c.manager.DeleteVolume(volumeID)

@@ -4,18 +4,18 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 )
 
 var (
 	provisionerName = qingcloud.ProvisionerName
 	master          = flag.String("master", "", "Master URL to build a client config from. Either this or kubeconfig needs to be set if the provisioner is being run out of cluster.")
 	kubeconfig      = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Either this or master needs to be set if the provisioner is being run out of cluster.")
-	qcConfig	= flag.String("qingcloud_config", qingcloud.DefaultQingCloudConfigPath, "Absolute path to qingcloud client config yaml.")
+	qcConfig        = flag.String("qingcloud_config", qingcloud.DefaultQingCloudConfigPath, "Absolute path to qingcloud client config yaml.")
 )
 
 func main() {

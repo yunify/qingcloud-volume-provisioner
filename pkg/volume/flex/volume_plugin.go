@@ -1,9 +1,9 @@
 package flex
 
 import (
-	"k8s.io/kubernetes/pkg/volume/flexvolume"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"k8s.io/kubernetes/pkg/volume/flexvolume"
 )
 
 type VolumeResult flexvolume.DriverStatus
@@ -13,17 +13,17 @@ func (v VolumeResult) ToJson() string {
 	return string(ret)
 }
 
-func (v VolumeResult) WithDevicePath(devicePath string) VolumeResult{
+func (v VolumeResult) WithDevicePath(devicePath string) VolumeResult {
 	v.DevicePath = devicePath
 	return v
 }
 
-func (v VolumeResult) WithVolumeName(volumeName string) VolumeResult{
+func (v VolumeResult) WithVolumeName(volumeName string) VolumeResult {
 	v.VolumeName = volumeName
 	return v
 }
 
-func (v VolumeResult) WithAttached(attached bool) VolumeResult{
+func (v VolumeResult) WithAttached(attached bool) VolumeResult {
 	v.Attached = attached
 	return v
 }
@@ -48,7 +48,6 @@ func NewVolumeSuccess() VolumeResult {
 type VolumeOptions map[string]interface{}
 
 type VolumePlugin interface {
-
 	Init() VolumeResult
 	Attach(options VolumeOptions, node string) VolumeResult
 	Detach(device string, node string) VolumeResult
@@ -57,6 +56,4 @@ type VolumePlugin interface {
 	WaitForAttach(device string, options VolumeOptions) VolumeResult
 	GetVolumeName(options VolumeOptions) VolumeResult
 	IsAttached(options VolumeOptions, node string) VolumeResult
-
 }
-
