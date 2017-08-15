@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"github.com/golang/glog"
 )
 
 const (
@@ -31,6 +32,7 @@ func fatalf(msg string, args ...interface{}) {
 // printResult is a convenient method for printing result of volume operation
 func printResult(result flex.VolumeResult) {
 	fmt.Printf(result.ToJson())
+	glog.Infof("Response: %#v", result.ToJson())
 	if result.Status == "Success" {
 		os.Exit(0)
 	}
@@ -75,14 +77,19 @@ func main() {
 	install := flag.Bool("install", false, fmt.Sprintf("Install %s to %s", qingcloud.FlexDriverName, DriverDir))
 
 	// Prepare logs
-	os.MkdirAll(LogDir, 0750)
-	//log.SetOutput(os.Stderr)
+	err := os.MkdirAll(LogDir, 0750)
+	if err != nil {
+		panic(fmt.Sprintf("mkdir %s err: %s", LogDir, err.Error()))
+	}
 
-	flag.Set("logtostderr", "true")
+	flag.Set("logtostderr", "false")
 	flag.Set("alsologtostderr", "false")
 	flag.Set("log_dir", LogDir)
-	flag.Set("stderrThreshold", "fatal")
+	flag.Set("stderrthreshold", "fatal")
 	flag.Parse()
+	defer glog.Flush()
+
+	glog.Infof("Call %s driver, args: %#v", qingcloud.FlexDriverName,  flag.Args())
 
 	qcSDKLogFile := filepath.Join(LogDir, "qingcloud_sdk.log")
 	f, err := os.OpenFile(qcSDKLogFile, os.O_WRONLY | os.O_CREATE, 0755)

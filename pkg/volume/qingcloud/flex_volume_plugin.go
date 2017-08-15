@@ -126,11 +126,10 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 }
 
 func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeResult {
-	volumeID, _ := options["volumeID"].(string)
-	if volumeID == "" {
-		return flex.NewVolumeError("volumeID is required, options: %+v", options)
-	}
-	return flex.NewVolumeSuccess().WithVolumeName(volumeID)
+	//TODO to implements this method when k8s 1.8 fix bug: https://github.com/kubernetes/kubernetes/issues/44737
+	//and https://github.com/kubernetes/kubernetes/blob/f39c6087c2b2b473c37618d9cd054d918be0f77a/pkg/volume/flexvolume/plugin.go#L123
+	// implements getvolumename call.
+	return flex.NewVolumeNotSupported("getvolumename is not supported.")
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
