@@ -6,11 +6,16 @@ import (
 	"fmt"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
+	qclogger "github.com/yunify/qingcloud-sdk-go/logger"
 	"os"
 	"path"
+	"path/filepath"
 )
 
-const DriverDir  = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+const (
+	DriverDir  = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+	LogDir = "/var/log/qingcloud-flex-volume"
+)
 
 // fatalf is a convenient method that outputs error in flex volume plugin style
 // and quits
@@ -70,14 +75,23 @@ func main() {
 	install := flag.Bool("install", false, fmt.Sprintf("Install %s to %s", qingcloud.FlexDriverName, DriverDir))
 
 	// Prepare logs
-	os.MkdirAll("/var/log/qingcloud-flex-volume", 0750)
+	os.MkdirAll(LogDir, 0750)
 	//log.SetOutput(os.Stderr)
 
 	flag.Set("logtostderr", "true")
 	flag.Set("alsologtostderr", "false")
-	flag.Set("log_dir", "/var/log/qingcloud-flex-volume")
+	flag.Set("log_dir", LogDir)
 	flag.Set("stderrThreshold", "fatal")
 	flag.Parse()
+
+	qcSDKLogFile := filepath.Join(LogDir, "qingcloud_sdk.log")
+	f, err := os.OpenFile(qcSDKLogFile, os.O_WRONLY | os.O_CREATE, 0755)
+	if err != nil {
+		fatalf("Error open log file: %s", qcSDKLogFile)
+	}
+	defer f.Close()
+
+	qclogger.SetOutput(f)
 
 	if *install {
 		installDriver()
