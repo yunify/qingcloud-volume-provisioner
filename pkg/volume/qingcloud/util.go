@@ -2,26 +2,19 @@ package qingcloud
 
 import (
 	"time"
-
-	"k8s.io/apimachinery/pkg/types"
 	qcservice "github.com/yunify/qingcloud-sdk-go/service"
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	"github.com/golang/glog"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"fmt"
+	"k8s.io/kubernetes/pkg/volume"
 )
 
 const (
 	waitInterval         = 10 * time.Second
 	operationWaitTimeout = 180 * time.Second
 )
-
-// Make sure qingcloud instance hostname or override-hostname (if provided) is equal to InstanceId
-// Recommended to use override-hostname
-func NodeNameToInstanceID(name types.NodeName) string {
-	return string(name)
-}
 
 func autoDetectedVolumeType(qcConfig *qcconfig.Config) (VolumeType, error) {
 	qcService, err := qcservice.Init(qcConfig)
@@ -84,19 +77,20 @@ func getInstanceByID(instanceID string, instanceService *qcservice.InstanceServi
 	return output.InstanceSet[0], nil
 }
 
-func fixVolumeCapacity(capacity *resource.Quantity, volumeType VolumeType) (*resource.Quantity, error) {
+func fixVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (resource.Quantity, error) {
+	requestBytes := capacity.Value()
 	// qingcloud works with gigabytes, convert to GiB with rounding up
-	requestGB := int(capacity.ScaledValue(resource.Giga))
+	requestGB := int(volume.RoundUpSize(requestBytes, 1024*1024*1024))
 
 	switch volumeType {
 	case VolumeTypeHP:
 		fallthrough
 	case VolumeTypeSHP:
-		// minimum 10GiB, maximum 500GiB
+		// minimum 10GiB, maximum 1000GiB
 		if requestGB < 10 {
 			requestGB = 10
 		} else if requestGB > 1000 {
-			return nil, fmt.Errorf("Can't request volume bigger than 1000GiB")
+			return capacity, fmt.Errorf("Can't request volume bigger than 1000GiB")
 		}
 		// must be a multiple of 10x
 		if requestGB%10 != 0 {
@@ -106,13 +100,13 @@ func fixVolumeCapacity(capacity *resource.Quantity, volumeType VolumeType) (*res
 		// minimum 100GiB, maximum 5000GiB
 		if requestGB < 100 {
 			requestGB = 100
-		} else if requestGB > 50000 {
-			return nil, fmt.Errorf("Can't request volume bigger than 5000GiB")
+		} else if requestGB > 5000 {
+			return capacity, fmt.Errorf("Can't request volume bigger than 5000GiB")
 		}
 		// must be a multiple of 50x
 		if requestGB%50 != 0 {
 			requestGB += 50 - requestGB%50
 		}
 	}
-	return resource.NewScaledQuantity(int64(requestGB), resource.Giga), nil
+	return resource.MustParse(fmt.Sprintf("%dGi", requestGB)), nil
 }

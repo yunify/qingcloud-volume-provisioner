@@ -87,7 +87,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	}
 
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
-	newCapacity, err := fixVolumeCapacity(&capacity, volumeOptions.VolumeType)
+	newCapacity, err := fixVolumeCapacity(capacity, volumeOptions.VolumeType)
 	volumeOptions.CapacityGB = int(newCapacity.ScaledValue(resource.Giga))
 
 
@@ -121,7 +121,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			PersistentVolumeReclaimPolicy: options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			Capacity: v1.ResourceList{
-				v1.ResourceName(v1.ResourceStorage): *newCapacity,
+				v1.ResourceName(v1.ResourceStorage): newCapacity,
 			},
 			StorageClassName: storageClassName,
 			PersistentVolumeSource: v1.PersistentVolumeSource{
