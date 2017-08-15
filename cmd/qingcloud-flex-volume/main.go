@@ -85,7 +85,8 @@ func main() {
 	flag.Set("logtostderr", "false")
 	flag.Set("alsologtostderr", "false")
 	flag.Set("log_dir", LogDir)
-	flag.Set("stderrthreshold", "fatal")
+	flag.Set("stderrthreshold", "FATAL")
+	flag.Set("v", "4")
 	flag.Parse()
 	defer glog.Flush()
 
@@ -101,6 +102,9 @@ func main() {
 	qclogger.SetOutput(f)
 
 	if *install {
+		flag.VisitAll(func(f *flag.Flag) {
+			glog.Infof("Flag: %s=%s", f.Name, f.Value)
+		})
 		installDriver()
 		return
 	}
