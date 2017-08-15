@@ -60,7 +60,7 @@ func installDriver(){
 			panic(err)
 		}
 	}
-	err = os.Symlink(ex, driverTargetFile)
+	err = os.Link(ex, driverTargetFile)
 	if err != nil {
 		panic(err)
 	}
