@@ -21,15 +21,14 @@ func NodeNameToInstanceID(name types.NodeName) string {
 	return string(name)
 }
 
-
 func autoDetectedVolumeType(qcConfig *qcconfig.Config) (int, error) {
 	qcService, err := qcservice.Init(qcConfig)
 	if err != nil {
-		return nil, err
+		return DefaultVolumeType, err
 	}
 	instanceService, err := qcService.Instance(qcConfig.Zone)
 	if err != nil {
-		return nil, err
+		return DefaultVolumeType, err
 	}
 
 	var volumeType int = 0

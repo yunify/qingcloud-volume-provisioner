@@ -32,15 +32,15 @@ func NewProvisioner(qcConfigPath string) (controller.Provisioner, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &qingcloudVolumeProvisioner{manager:manager}, nil
+	return &volumeProvisioner{manager: manager}, nil
 }
 
 
-type qingcloudVolumeProvisioner struct {
+type volumeProvisioner struct {
 	manager VolumeManager
 }
 
-func (c *qingcloudVolumeProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
+func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
 
 	glog.V(4).Infof("qingcloudVolumeProvisioner Provision called, options: [%+v]", options)
 
@@ -122,7 +122,6 @@ func (c *qingcloudVolumeProvisioner) Provision(options controller.VolumeOptions)
 	annotations[annProvisionerId] = "qingcloud-volume-provisioner"
 
 	flexVolumeConfig := make(map[string]string)
-	flexVolumeConfig["volumeName"] = volumeOptions.VolumeName
 	flexVolumeConfig["volumeID"] = volumeID
 	//for key, value := range volumeConfig {
 	//	flexVolumeConfig[key] = fmt.Sprintf("%v", value)
@@ -156,7 +155,7 @@ func (c *qingcloudVolumeProvisioner) Provision(options controller.VolumeOptions)
 	return pv, nil
 }
 
-func (c *qingcloudVolumeProvisioner) Delete(volume *v1.PersistentVolume) error{
+func (c *volumeProvisioner) Delete(volume *v1.PersistentVolume) error{
 	if volume.Name == "" {
 		return fmt.Errorf("volume name cannot be empty %#v", volume)
 	}

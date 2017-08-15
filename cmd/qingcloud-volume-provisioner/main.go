@@ -19,7 +19,6 @@ var (
 	provisionerName = flag.String("provisioner", "qingcloud.com/qingcloud-volume", "Name of the provisioner. The provisioner will only provision volumes for claims that request a StorageClass with a provisioner field set equal to this name.")
 	master          = flag.String("master", "", "Master URL to build a client config from. Either this or kubeconfig needs to be set if the provisioner is being run out of cluster.")
 	kubeconfig      = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Either this or master needs to be set if the provisioner is being run out of cluster.")
-	execCommand     = flag.String("execCommand", "/opt/storage/flex-provision.sh", "The provisioner executable.")
 )
 
 func main() {
@@ -30,10 +29,6 @@ func main() {
 		glog.Fatalf("Invalid provisioner specified: %v", errs)
 	}
 	glog.Infof("Provisioner %s specified", *provisionerName)
-
-	if execCommand == nil {
-		glog.Fatalf("Invalid flags specified: must provide provisioner exec command")
-	}
 
 	// Create the client according to whether we are running in or out-of-cluster
 	var config *rest.Config

@@ -11,6 +11,8 @@ import (
 	"github.com/golang/glog"
 )
 
+const DefaultVolumeType = 0
+
 type volumeManager struct {
 	instanceService      *qcservice.InstanceService
 	volumeService        *qcservice.VolumeService
