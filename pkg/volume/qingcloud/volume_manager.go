@@ -10,7 +10,6 @@ import (
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"github.com/yunify/snips/publish/qingcloud-sdk-go/service"
 )
 
 const (
@@ -181,7 +180,7 @@ func (vm *volumeManager) CreateVolume(volumeOptions *VolumeOptions) (string, err
 	output, err := vm.volumeService.CreateVolumes(&qcservice.CreateVolumesInput{
 		VolumeName: &volumeOptions.VolumeName,
 		Size:       &volumeOptions.CapacityGB,
-		VolumeType: service.Int(int(volumeOptions.VolumeType)),
+		VolumeType: qcservice.Int(int(volumeOptions.VolumeType)),
 	})
 	if err != nil {
 		return "", err
