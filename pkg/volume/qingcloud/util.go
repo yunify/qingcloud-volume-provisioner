@@ -76,7 +76,8 @@ func getInstanceByID(instanceID string, instanceService *qcservice.InstanceServi
 	return output.InstanceSet[0], nil
 }
 
-func fixVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (resource.Quantity, error) {
+//RoundUpVolumeCapacity return volume size in GiB
+func RoundUpVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (int, error) {
 	requestBytes := capacity.Value()
 	// qingcloud works with gigabytes, convert to GiB with rounding up
 	requestGB := int(volume.RoundUpSize(requestBytes, 1024*1024*1024))
@@ -89,7 +90,7 @@ func fixVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (resou
 		if requestGB < 10 {
 			requestGB = 10
 		} else if requestGB > 1000 {
-			return capacity, fmt.Errorf("Can't request volume bigger than 1000GiB")
+			return 0, fmt.Errorf("Can't request volume bigger than 1000GiB")
 		}
 		// must be a multiple of 10x
 		if requestGB%10 != 0 {
@@ -100,12 +101,12 @@ func fixVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (resou
 		if requestGB < 100 {
 			requestGB = 100
 		} else if requestGB > 5000 {
-			return capacity, fmt.Errorf("Can't request volume bigger than 5000GiB")
+			return 0, fmt.Errorf("Can't request volume bigger than 5000GiB")
 		}
 		// must be a multiple of 50x
 		if requestGB%50 != 0 {
 			requestGB += 50 - requestGB%50
 		}
 	}
-	return resource.MustParse(fmt.Sprintf("%dGi", requestGB)), nil
+	return requestGB, nil
 }
