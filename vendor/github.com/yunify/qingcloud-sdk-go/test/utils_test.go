@@ -14,10 +14,20 @@
 // | limitations under the License.
 // +-------------------------------------------------------------------------
 
-// Package sdk is the official QingCloud SDK for the Go programming language.
-//
-// https://github.com/yunify/qingcloud-sdk-go
-package sdk
+package test
 
-// Version number.
-const Version = "2.0.0-alpha.8"
+import (
+	"fmt"
+	"os"
+)
+
+func checkErrorForExit(err error, code ...int) {
+	if err != nil {
+		exitCode := 1
+		if len(code) > 0 {
+			exitCode = code[0]
+		}
+		fmt.Println(err.Error(), exitCode)
+		os.Exit(exitCode)
+	}
+}
