@@ -47,21 +47,22 @@ func installDriver(){
 		panic(err)
 	}
 	vendor, driver := path.Split(qingcloud.FlexDriverName)
+	vendor = path.Clean(vendor)
 	driverTargetDir := path.Join(DriverDir, fmt.Sprintf("%s~%s", vendor, driver))
+	driverTargetFile := path.Join(driverTargetDir, driver)
+	fmt.Printf("Install driver to %s \n", driverTargetFile)
 	err = os.MkdirAll(driverTargetDir, 0644)
 	if err != nil {
 		panic(err)
 	}
-	driverTargetFile := path.Join(driverTargetDir, driver)
 	err = os.Symlink(ex, driverTargetFile)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Install driver to %s \n", driverTargetFile)
 }
 
 func main() {
-	install := flag.Bool("install", false, "create flex volume driver link")
+	install := flag.Bool("install", false, fmt.Sprintf("Install %s to %s", qingcloud.FlexDriverName, DriverDir))
 
 	// Prepare logs
 	os.MkdirAll("/var/log/qingcloud-flex-volume", 0750)
