@@ -6,4 +6,4 @@ import:
   - lib/controller
   - lib/leaderelection
 - package: github.com/yunify/qingcloud-sdk-go
-  version: v2.0.0-alpha.7
+  version: v2.0.0-alpha.8
