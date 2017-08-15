@@ -18,7 +18,7 @@ const (
 	OptionReadWrite = "kubernetes.io/readwrite"
 
 	DefaultFSType   = "ext4"
-	DriverName      = "qingcloud/flex"
+	DriverName      = "qingcloud/flex-volume"
 
 	DefaultQingCloudConfigPath = "/etc/qingcloud/client.yaml"
 )

@@ -2,33 +2,27 @@ package main
 
 import (
 	"flag"
-	"strings"
-
 	"github.com/golang/glog"
-	vol "github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud_volume"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 )
 
 var (
-	provisionerName = flag.String("provisioner", "qingcloud.com/qingcloud-volume", "Name of the provisioner. The provisioner will only provision volumes for claims that request a StorageClass with a provisioner field set equal to this name.")
+	provisionerName = qingcloud.ProvisionerName
 	master          = flag.String("master", "", "Master URL to build a client config from. Either this or kubeconfig needs to be set if the provisioner is being run out of cluster.")
 	kubeconfig      = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Either this or master needs to be set if the provisioner is being run out of cluster.")
+	qcConfig	= flag.String("qingcloud_config", qingcloud.DefaultQingCloudConfigPath, "Absolute path to qingcloud client config yaml.")
 )
 
 func main() {
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	if errs := validateProvisioner(*provisionerName, field.NewPath("provisioner")); len(errs) != 0 {
-		glog.Fatalf("Invalid provisioner specified: %v", errs)
-	}
-	glog.Infof("Provisioner %s specified", *provisionerName)
+	glog.Infof("Provisioner %s specified", provisionerName)
 
 	// Create the client according to whether we are running in or out-of-cluster
 	var config *rest.Config
@@ -57,30 +51,15 @@ func main() {
 
 	// Create the provisioner: it implements the Provisioner interface expected by
 	// the controller
-	provisioner, _ := vol.QingcloudVolumePlugin.NewProvisioner()
+	provisioner, _ := qingcloud.NewProvisioner(*qcConfig)
 
 	// Start the provision controller which will dynamically provision NFS PVs
 	pc := controller.NewProvisionController(
 		clientset,
-		*provisionerName,
+		provisionerName,
 		provisioner,
 		serverVersion.GitVersion,
 	)
 
 	pc.Run(wait.NeverStop)
-}
-
-// validateProvisioner tests if provisioner is a valid qualified name.
-// https://github.com/kubernetes/kubernetes/blob/release-1.4/pkg/apis/storage/validation/validation.go
-func validateProvisioner(provisioner string, fldPath *field.Path) field.ErrorList {
-	allErrs := field.ErrorList{}
-	if len(provisioner) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath, provisioner))
-	}
-	if len(provisioner) > 0 {
-		for _, msg := range validation.IsQualifiedName(strings.ToLower(provisioner)) {
-			allErrs = append(allErrs, field.Invalid(fldPath, provisioner, msg))
-		}
-	}
-	return allErrs
 }

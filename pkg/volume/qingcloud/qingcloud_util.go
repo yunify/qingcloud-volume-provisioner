@@ -8,6 +8,8 @@ import (
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	"github.com/golang/glog"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"fmt"
 )
 
 const (
@@ -21,7 +23,7 @@ func NodeNameToInstanceID(name types.NodeName) string {
 	return string(name)
 }
 
-func autoDetectedVolumeType(qcConfig *qcconfig.Config) (int, error) {
+func autoDetectedVolumeType(qcConfig *qcconfig.Config) (VolumeType, error) {
 	qcService, err := qcservice.Init(qcConfig)
 	if err != nil {
 		return DefaultVolumeType, err
@@ -31,16 +33,16 @@ func autoDetectedVolumeType(qcConfig *qcconfig.Config) (int, error) {
 		return DefaultVolumeType, err
 	}
 
-	var volumeType int = 0
+	volumeType := DefaultVolumeType
 	host, err := getHostname()
 	if err == nil {
 		ins, err := getInstanceByID(host, instanceService)
 		if err == nil {
 			if ins != nil {
 				if ins.InstanceClass == nil || *ins.InstanceClass == 0 {
-					volumeType = 0
+					volumeType = VolumeTypeHP
 				}else {
-					volumeType = 3
+					volumeType = VolumeTypeSHP
 				}
 				glog.V(2).Infof("Auto detected volume type: %v", volumeType)
 			}
@@ -80,4 +82,37 @@ func getInstanceByID(instanceID string, instanceService *qcservice.InstanceServi
 	}
 
 	return output.InstanceSet[0], nil
+}
+
+func fixVolumeCapacity(capacity *resource.Quantity, volumeType VolumeType) (*resource.Quantity, error) {
+	// qingcloud works with gigabytes, convert to GiB with rounding up
+	requestGB := int(capacity.ScaledValue(resource.Giga))
+
+	switch volumeType {
+	case VolumeTypeHP:
+		fallthrough
+	case VolumeTypeSHP:
+		// minimum 10GiB, maximum 500GiB
+		if requestGB < 10 {
+			requestGB = 10
+		} else if requestGB > 1000 {
+			return nil, fmt.Errorf("Can't request volume bigger than 1000GiB")
+		}
+		// must be a multiple of 10x
+		if requestGB%10 != 0 {
+			requestGB += 10 - requestGB%10
+		}
+	case VolumeTypeHC:
+		// minimum 100GiB, maximum 5000GiB
+		if requestGB < 100 {
+			requestGB = 100
+		} else if requestGB > 50000 {
+			return nil, fmt.Errorf("Can't request volume bigger than 5000GiB")
+		}
+		// must be a multiple of 50x
+		if requestGB%50 != 0 {
+			requestGB += 50 - requestGB%50
+		}
+	}
+	return resource.NewScaledQuantity(int64(requestGB), resource.Giga), nil
 }
