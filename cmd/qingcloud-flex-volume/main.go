@@ -55,6 +55,11 @@ func installDriver(){
 	if err != nil {
 		panic(err)
 	}
+	if _, err := os.Stat(driverTargetFile); !os.IsNotExist(err) {
+		if err = os.Remove(driverTargetFile); err != nil {
+			panic(err)
+		}
+	}
 	err = os.Symlink(ex, driverTargetFile)
 	if err != nil {
 		panic(err)
