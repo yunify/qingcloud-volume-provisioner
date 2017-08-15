@@ -122,7 +122,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			StorageClassName: storageClassName,
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				FlexVolume: &v1.FlexVolumeSource{
-					Driver:   DriverName,
+					Driver:   FlexDriverName,
 					FSType:   DefaultFSType,
 					ReadOnly: false,
 					Options:  flexVolumeConfig,

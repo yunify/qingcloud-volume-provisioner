@@ -7,7 +7,10 @@ import (
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
 	"os"
+	"path"
 )
+
+const DriverDir  = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
 
 // fatalf is a convenient method that outputs error in flex volume plugin style
 // and quits
@@ -38,9 +41,27 @@ func ensureVolumeOptions(v string) (vo flex.VolumeOptions) {
 	return
 }
 
+func installDriver(){
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	vendor, driver := path.Split(qingcloud.FlexDriverName)
+	driverTargetDir := path.Join(DriverDir, fmt.Sprintf("%s~%s", vendor, driver))
+	err = os.MkdirAll(driverTargetDir, 0644)
+	if err != nil {
+		panic(err)
+	}
+	driverTargetFile := path.Join(driverTargetDir, driver)
+	err = os.Symlink(ex, driverTargetFile)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Install driver to %s \n", driverTargetFile)
+}
+
 func main() {
-	// Used in downloader. To test if the binary is complete
-	test := flag.Bool("test", false, "Dry run. To test if the binary is complete")
+	install := flag.Bool("install", false, "create flex volume driver link")
 
 	// Prepare logs
 	os.MkdirAll("/var/log/qingcloud-flex-volume", 0750)
@@ -52,7 +73,8 @@ func main() {
 	flag.Set("stderrThreshold", "fatal")
 	flag.Parse()
 
-	if *test {
+	if *install {
+		installDriver()
 		return
 	}
 
