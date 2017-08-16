@@ -24,7 +24,11 @@ func printResult(result flex.VolumeResult) int {
 		glog.Infof("ResponseSuccess: %#v", result.ToJson())
 		return 0
 	}
-	glog.Infof("ResponseError: %#v", result.Error())
+	if result.Status == flex.StatusNotSupported {
+		glog.Infof("ResponseNotSupported : %#v", result.Error())
+	}else {
+		glog.Errorf("ResponseFailure : %#v", result.Error())
+	}
 	return 1
 }
 
