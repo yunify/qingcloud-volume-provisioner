@@ -120,9 +120,9 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 	err := volumeMounter.FormatAndMount(device, dir, fstype, flags)
 	if err != nil {
 		os.Remove(dir)
-		return flex.NewVolumeError(err.Error())
+		return flex.NewVolumeError("FormatAndMount device (%s) dir (%s) ", device, dir, err.Error())
 	}
-	return flex.NewVolumeSuccess().WithDevicePath(device).WithAttached(true)
+	return flex.NewVolumeSuccess()
 }
 
 func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
