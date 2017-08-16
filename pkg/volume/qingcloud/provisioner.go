@@ -89,7 +89,8 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	}
 	volumeOptions.CapacityGB = sizeGB
 
-	volumeOptions.VolumeName = options.PVC.Name
+	//use pv name as volumeName
+	volumeOptions.VolumeName = options.PVName
 	volumeID, err := c.manager.CreateVolume(volumeOptions)
 	if err != nil {
 		glog.V(2).Infof("Error creating qingcloud volume: %v", err)
