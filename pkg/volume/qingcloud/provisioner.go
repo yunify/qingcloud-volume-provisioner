@@ -6,7 +6,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"k8s.io/apimachinery/pkg/api/resource"
-	//"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
@@ -90,7 +89,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	}
 	volumeOptions.CapacityGB = sizeGB
 
-	volumeOptions.VolumeName = fmt.Sprintf("k8s-%s-%s", options.PVC.Name, options.PVName)
+	volumeOptions.VolumeName = options.PVC.Name
 	volumeID, err := c.manager.CreateVolume(volumeOptions)
 	if err != nil {
 		glog.V(2).Infof("Error creating qingcloud volume: %v", err)
@@ -108,7 +107,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	annotations[annProvisionerId] = ProvisionerName
 
 	flexVolumeConfig := make(map[string]string)
-	flexVolumeConfig["volumeID"] = volumeID
+	flexVolumeConfig[OptionVolumeID] = volumeID
 
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{

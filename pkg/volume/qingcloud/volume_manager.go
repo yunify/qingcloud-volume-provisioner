@@ -39,7 +39,7 @@ type VolumeOptions struct {
 	VolumeName string
 }
 
-// Volumes is an interface for managing cloud-provisioned volumes
+// VolumeManager is an interface for managing cloud-provisioned volumes
 type VolumeManager interface {
 	// Attach the disk to the specified instance
 	// Returns the device (e.g. /dev/sdb) where we attached the volume
@@ -56,6 +56,12 @@ type VolumeManager interface {
 	// Returns true if the volume was deleted
 	// If the was not found, returns (false, nil)
 	DeleteVolume(volumeID string) (bool, error)
+
+	// UpdateVolume attribute by volumeID
+	UpdateVolume(volumeID, volumeName string) error
+
+	//GetVolumeIDByName
+	GetVolumeIDByName(volumeName string) (string, error)
 
 	// Check if the volume is already attached to the instance
 	VolumeIsAttached(volumeID string, instanceID string) (bool, error)
@@ -115,7 +121,7 @@ func newVolumeManager(qcConfigPath string) (VolumeManager, error) {
 	return &qc, nil
 }
 
-// AttachVolume implements Volumes.AttachVolume
+// AttachVolume implements VolumeManager.AttachVolume
 func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (string, error) {
 	glog.V(4).Infof("AttachVolume(%v,%v) called", volumeID, instanceID)
 
@@ -157,7 +163,7 @@ func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (strin
 	return *dev, nil
 }
 
-// DetachVolume implements Volumes.DetachVolume
+// DetachVolume implements VolumeManager.DetachVolume
 func (vm *volumeManager) DetachVolume(volumeID string, instanceID string) error {
 	glog.V(4).Infof("DetachVolume(%v,%v) called", volumeID, instanceID)
 
@@ -173,7 +179,7 @@ func (vm *volumeManager) DetachVolume(volumeID string, instanceID string) error 
 	return err
 }
 
-// CreateVolume implements Volumes.CreateVolume
+// CreateVolume implements VolumeManager.CreateVolume
 func (vm *volumeManager) CreateVolume(volumeOptions *VolumeOptions) (string, error) {
 	glog.V(4).Infof("CreateVolume(%v) called", volumeOptions)
 
@@ -190,7 +196,7 @@ func (vm *volumeManager) CreateVolume(volumeOptions *VolumeOptions) (string, err
 	return *output.Volumes[0], nil
 }
 
-// DeleteVolume implements Volumes.DeleteVolume
+// DeleteVolume implements VolumeManager.DeleteVolume
 func (vm *volumeManager) DeleteVolume(volumeID string) (bool, error) {
 	glog.V(4).Infof("DeleteVolume(%v) called", volumeID)
 
@@ -210,7 +216,7 @@ func (vm *volumeManager) DeleteVolume(volumeID string) (bool, error) {
 	return true, nil
 }
 
-// VolumeIsAttached implements Volumes.VolumeIsAttached
+// VolumeIsAttached implements VolumeManager.VolumeIsAttached
 func (vm *volumeManager) VolumeIsAttached(volumeID string, instanceID string) (bool, error) {
 	glog.V(4).Infof("VolumeIsAttached(%v,%v) called", volumeID, instanceID)
 
@@ -250,4 +256,29 @@ func (vm *volumeManager) DisksAreAttached(volumeIDs []string, instanceID string)
 
 func (vm *volumeManager) GetDefaultVolumeType() VolumeType {
 	return vm.defaultVolumeType
+}
+
+func (vm *volumeManager) UpdateVolume(volumeID, volumeName string) error {
+	glog.V(4).Infof("UpdateVolume(%v, %v) called",volumeID, volumeName)
+	_, err := vm.volumeService.ModifyVolumeAttributes(&qcservice.ModifyVolumeAttributesInput{
+		Volume: &volumeID,
+		VolumeName: &volumeName,
+	})
+	return err
+}
+
+// GetVolumeIDByName implements VolumeManager.GetVolumeIDByName
+func (vm *volumeManager) GetVolumeIDByName(volumeName string) (string, error) {
+	glog.V(4).Infof("GetVolumeIDByName(%v) called", volumeName)
+
+	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
+		SearchWord: &volumeName,
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(output.VolumeSet) == 0 {
+		return "", fmt.Errorf("Can not find volume by name: '%v'", volumeName)
+	}
+	return *output.VolumeSet[0].VolumeID, nil
 }

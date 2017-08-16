@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/volume"
 	"time"
+	"strings"
 )
 
 const (
@@ -109,4 +110,8 @@ func RoundUpVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (i
 		}
 	}
 	return requestGB, nil
+}
+
+func isVolumeID(value string) bool {
+	return strings.HasPrefix(value, "vol-")
 }

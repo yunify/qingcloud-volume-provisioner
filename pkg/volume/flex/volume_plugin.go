@@ -50,7 +50,7 @@ type VolumeOptions map[string]interface{}
 type VolumePlugin interface {
 	Init() VolumeResult
 	Attach(options VolumeOptions, node string) VolumeResult
-	Detach(device string, node string) VolumeResult
+	Detach(pvOrVolumeName string, node string) VolumeResult
 	MountDevice(dir, device string, options VolumeOptions) VolumeResult
 	UnmountDevice(dir string) VolumeResult
 	WaitForAttach(device string, options VolumeOptions) VolumeResult

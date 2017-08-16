@@ -16,6 +16,8 @@ const (
 
 	OptionFSType    = "kubernetes.io/fsType"
 	OptionReadWrite = "kubernetes.io/readwrite"
+	OptionPVorVolumeName = "kubernetes.io/pvOrVolumeName"
+	OptionVolumeID = "volumeID"
 
 	DefaultFSType  = "ext4"
 	FlexDriverName = "qingcloud/flex-volume"
@@ -40,8 +42,15 @@ func (*flexVolumePlugin) Init() flex.VolumeResult {
 }
 
 func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.VolumeResult {
-	volumeID, _ := options["volumeID"].(string)
-
+	volumeID, _ := options[OptionVolumeID].(string)
+	pvOrVolumeName, _ := options[OptionPVorVolumeName].(string)
+	// flexVolumeDriver GetVolumeName is not yet supported,  so PVorVolumeName is pvName, and store pvName to volumeName
+	if !isVolumeID(pvOrVolumeName) {
+		err := p.manager.UpdateVolume(volumeID, pvOrVolumeName)
+		if err != nil {
+			return flex.NewVolumeError("Error updating volume (%s) name to (%s) : %s", volumeID, pvOrVolumeName, err.Error())
+		}
+	}
 	// qingcloud.AttachVolume checks if disk is already attached to node and
 	// succeeds in that case, so no need to do that separately.
 	devicePath, err := p.manager.AttachVolume(volumeID, node)
@@ -55,8 +64,35 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 	return flex.NewVolumeSuccess().WithDevicePath(devicePath)
 }
 
-func (*flexVolumePlugin) Detach(device string, node string) flex.VolumeResult {
-	panic("implement me")
+func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.VolumeResult {
+	var volumeID string
+	var err error
+	if !isVolumeID(pvOrVolumeName) {
+		volumeID, err = p.manager.GetVolumeIDByName(pvOrVolumeName)
+		if err != nil {
+			return flex.NewVolumeError("Error GetVolumeIDByName (%s) : %s", pvOrVolumeName, err.Error())
+		}
+	}else {
+		volumeID = pvOrVolumeName
+	}
+	attached, err := p.manager.VolumeIsAttached(volumeID, node)
+	if err != nil {
+		// Log error and continue with detach
+		glog.Errorf(
+			"Error checking if volume (%q) is already attached to current node (%v). Will continue and try detach anyway. err=%v",
+			volumeID, node, err)
+	}
+
+	if err == nil && !attached {
+		// Volume is already detached from node.
+		glog.Infof("detach operation was successful. volume %q is already detached from node %v.", volumeID, node)
+		return nil
+	}
+
+	if err = p.manager.DetachVolume(volumeID, node); err != nil {
+		return flex.NewVolumeError("Error detaching volumeID %q: %v", volumeID, err)
+	}
+	return flex.NewVolumeSuccess()
 }
 
 func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOptions) flex.VolumeResult {
@@ -99,7 +135,7 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 }
 
 func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
-	volumeID, _ := options["volumeID"].(string)
+	volumeID, _ := options[OptionVolumeID].(string)
 
 	if device == "" {
 		return flex.NewVolumeError("WaitForAttach failed for qingcloud Volume %q: device is empty.", volumeID)
@@ -133,7 +169,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
-	volumeID, _ := options["volumeID"].(string)
+	volumeID, _ := options[OptionVolumeID].(string)
 	r, err := p.manager.VolumeIsAttached(volumeID, node)
 
 	if err != nil {
