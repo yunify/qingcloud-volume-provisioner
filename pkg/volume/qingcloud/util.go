@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/volume"
-	"time"
 	"strings"
+	"time"
 )
 
 const (

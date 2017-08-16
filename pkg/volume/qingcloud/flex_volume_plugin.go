@@ -14,10 +14,10 @@ import (
 const (
 	checkSleepDuration = time.Second
 
-	OptionFSType    = "kubernetes.io/fsType"
-	OptionReadWrite = "kubernetes.io/readwrite"
+	OptionFSType         = "kubernetes.io/fsType"
+	OptionReadWrite      = "kubernetes.io/readwrite"
 	OptionPVorVolumeName = "kubernetes.io/pvOrVolumeName"
-	OptionVolumeID = "volumeID"
+	OptionVolumeID       = "volumeID"
 
 	DefaultFSType  = "ext4"
 	FlexDriverName = "qingcloud/flex-volume"
@@ -72,7 +72,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 		if err != nil {
 			return flex.NewVolumeError("Error GetVolumeIDByName (%s) : %s", pvOrVolumeName, err.Error())
 		}
-	}else {
+	} else {
 		volumeID = pvOrVolumeName
 	}
 	attached, err := p.manager.VolumeIsAttached(volumeID, node)

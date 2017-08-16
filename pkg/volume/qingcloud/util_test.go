@@ -134,4 +134,3 @@ func TestRoundUpVolumeCapacity(t *testing.T) {
 //	println("q2.ScaledValue(resource.Giga)",q2.ScaledValue(resource.Giga))
 //	println("q2.ScaledValue(resource.Mega)",q2.ScaledValue(resource.Mega))
 //}
-

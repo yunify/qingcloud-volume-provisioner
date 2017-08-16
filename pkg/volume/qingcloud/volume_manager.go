@@ -259,9 +259,9 @@ func (vm *volumeManager) GetDefaultVolumeType() VolumeType {
 }
 
 func (vm *volumeManager) UpdateVolume(volumeID, volumeName string) error {
-	glog.V(4).Infof("UpdateVolume(%v, %v) called",volumeID, volumeName)
+	glog.V(4).Infof("UpdateVolume(%v, %v) called", volumeID, volumeName)
 	_, err := vm.volumeService.ModifyVolumeAttributes(&qcservice.ModifyVolumeAttributesInput{
-		Volume: &volumeID,
+		Volume:     &volumeID,
 		VolumeName: &volumeName,
 	})
 	return err
