@@ -51,7 +51,7 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 			return flex.NewVolumeError("Error updating volume (%s) name to (%s) : %s", volumeID, pvOrVolumeName, err.Error())
 		}
 	}
-	// qingcloud.AttachVolume checks if disk is already attached to node and
+	// VolumeManager.AttachVolume checks if disk is already attached to node and
 	// succeeds in that case, so no need to do that separately.
 	devicePath, err := p.manager.AttachVolume(volumeID, node)
 	if err != nil {
@@ -138,7 +138,7 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 	volumeID, _ := options[OptionVolumeID].(string)
 
 	if device == "" {
-		return flex.NewVolumeError("WaitForAttach failed for qingcloud Volume %q: device is empty.", volumeID)
+		return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
 	}
 
 	ticker := time.NewTicker(checkSleepDuration)
@@ -147,14 +147,14 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 	for {
 		select {
 		case <-ticker.C:
-			glog.V(5).Infof("Checking qingcloud volume %q is attached.", volumeID)
+			glog.V(4).Infof("Checking  volume %q is attached.", volumeID)
 			exists, err := volumeutil.PathExists(device)
 			if err != nil {
 				// Log error, if any, and continue checking periodically.
-				glog.Errorf("Error verifying qingcloud volume (%q) is attached: %v", volumeID, err)
+				glog.Errorf("Error verifying  volume (%q) is attached: %v", volumeID, err)
 			} else if exists {
 				// A device path has successfully been created for the PD
-				glog.Infof("Successfully found attached qingcloud volume %q.", volumeID)
+				glog.Infof("Successfully found attached  volume %q.", volumeID)
 				return flex.NewVolumeSuccess().WithDevicePath(device)
 			}
 		}
@@ -165,6 +165,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 	//TODO to implements this method when k8s 1.8 fix bug: https://github.com/kubernetes/kubernetes/issues/44737
 	//and https://github.com/kubernetes/kubernetes/blob/f39c6087c2b2b473c37618d9cd054d918be0f77a/pkg/volume/flexvolume/plugin.go#L123
 	// implements getvolumename call.
+	// https://github.com/kubernetes/kubernetes/pull/46249
 	return flex.NewVolumeNotSupported("getvolumename is not supported.")
 }
 

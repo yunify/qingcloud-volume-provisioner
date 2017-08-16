@@ -8,6 +8,12 @@ import (
 
 type VolumeResult flexvolume.DriverStatus
 
+const (
+	StatusNotSupported = flexvolume.StatusNotSupported
+	StatusSuccess = flexvolume.StatusSuccess
+	StatusFailure = "Failure"
+)
+
 func (v VolumeResult) ToJson() string {
 	ret, _ := json.Marshal(&v)
 	return string(ret)
@@ -34,15 +40,15 @@ func (v VolumeResult) Error() string {
 
 // NewVolumeError creates failure error with given message
 func NewVolumeError(msg string, args ...interface{}) VolumeResult {
-	return VolumeResult{Message: fmt.Sprintf(msg, args...), Status: "Failure"}
+	return VolumeResult{Message: fmt.Sprintf(msg, args...), Status: StatusFailure}
 }
 
 func NewVolumeNotSupported(msg string) VolumeResult {
-	return VolumeResult{Message: msg, Status: flexvolume.StatusNotSupported}
+	return VolumeResult{Message: msg, Status: StatusNotSupported}
 }
 
 func NewVolumeSuccess() VolumeResult {
-	return VolumeResult{Status: flexvolume.StatusSuccess}
+	return VolumeResult{Status: StatusSuccess}
 }
 
 type VolumeOptions map[string]interface{}
