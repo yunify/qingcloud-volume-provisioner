@@ -96,7 +96,7 @@ func handler(op string, args []string) flex.VolumeResult {
 		if len(args) < 2 {
 			return flex.NewVolumeError("isattached requires options in json format and a node name")
 		}
-		ret = volumePlugin.Attach(ensureVolumeOptions(args[0]), args[1])
+		ret = volumePlugin.IsAttached(ensureVolumeOptions(args[0]), args[1])
 	case "detach":
 		if len(args) < 2 {
 			return flex.NewVolumeError("detach requires a device path and a node name")
