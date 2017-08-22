@@ -20,13 +20,13 @@ const (
 // printResult is a convenient method for printing result of volume operation, and return exit code.
 func printResult(result flex.VolumeResult) int {
 	fmt.Printf(result.ToJson())
-	if result.Status == flex.StatusSuccess  {
+	if result.Status == flex.StatusSuccess {
 		glog.Infof("ResponseSuccess: %#v", result.ToJson())
 		return 0
 	}
 	if result.Status == flex.StatusNotSupported {
 		glog.Infof("ResponseNotSupported : %#v", result.Error())
-	}else {
+	} else {
 		glog.Errorf("ResponseFailure : %#v", result.Error())
 	}
 	return 1

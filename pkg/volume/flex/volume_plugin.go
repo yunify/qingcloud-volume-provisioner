@@ -10,8 +10,8 @@ type VolumeResult flexvolume.DriverStatus
 
 const (
 	StatusNotSupported = flexvolume.StatusNotSupported
-	StatusSuccess = flexvolume.StatusSuccess
-	StatusFailure = "Failure"
+	StatusSuccess      = flexvolume.StatusSuccess
+	StatusFailure      = "Failure"
 )
 
 func (v VolumeResult) ToJson() string {

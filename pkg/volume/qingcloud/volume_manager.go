@@ -13,7 +13,6 @@ import (
 )
 
 const (
-
 	VolumeTypeNone = VolumeType(-1)
 	//https://docs.qingcloud.com/api/volume/describe_volumes.html
 	//High Performance
@@ -80,7 +79,7 @@ type volumeManager struct {
 	jobService        *qcservice.JobService
 	zone              string
 	defaultVolumeType VolumeType
-	qcConfig	*qcconfig.Config
+	qcConfig          *qcconfig.Config
 }
 
 // newVolumeManager returns a new instance of QingCloudVolumeManager.
@@ -111,7 +110,7 @@ func newVolumeManager(qcConfigPath string) (VolumeManager, error) {
 		volumeService:     volumeService,
 		jobService:        jobService,
 		zone:              qcConfig.Zone,
-		qcConfig: qcConfig,
+		qcConfig:          qcConfig,
 		defaultVolumeType: VolumeTypeNone,
 	}
 
