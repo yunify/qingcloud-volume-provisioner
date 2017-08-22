@@ -13,6 +13,8 @@ import (
 )
 
 const (
+
+	VolumeTypeNone = VolumeType(-1)
 	//https://docs.qingcloud.com/api/volume/describe_volumes.html
 	//High Performance
 	VolumeTypeHP = VolumeType(0)
@@ -78,6 +80,7 @@ type volumeManager struct {
 	jobService        *qcservice.JobService
 	zone              string
 	defaultVolumeType VolumeType
+	qcConfig	*qcconfig.Config
 }
 
 // newVolumeManager returns a new instance of QingCloudVolumeManager.
@@ -104,19 +107,15 @@ func newVolumeManager(qcConfigPath string) (VolumeManager, error) {
 		return nil, err
 	}
 
-	defaultVolumeType, err := autoDetectedVolumeType(qcConfig)
-	if err != nil {
-		return nil, err
-	}
-
 	qc := volumeManager{
 		volumeService:     volumeService,
 		jobService:        jobService,
 		zone:              qcConfig.Zone,
-		defaultVolumeType: defaultVolumeType,
+		qcConfig: qcConfig,
+		defaultVolumeType: VolumeTypeNone,
 	}
 
-	glog.V(1).Infof("QingCloudVolumeManager init finish, zone: %v, defaultVolumeType: %v", qc.zone, qc.defaultVolumeType)
+	glog.V(4).Infof("QingCloudVolumeManager init finish, zone: %v", qc.zone)
 
 	return &qc, nil
 }
@@ -164,6 +163,20 @@ func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (strin
 // DetachVolume implements VolumeManager.DetachVolume
 func (vm *volumeManager) DetachVolume(volumeID string, instanceID string) error {
 	glog.V(4).Infof("DetachVolume(%v,%v) called", volumeID, instanceID)
+
+	attached, err := vm.VolumeIsAttached(volumeID, instanceID)
+	if err != nil {
+		// Log error and continue with detach
+		glog.Errorf(
+			"Error checking if volume (%q) is already attached to current node (%v). Will continue and try detach anyway. err=%v",
+			volumeID, instanceID, err)
+	}
+
+	if err == nil && !attached {
+		// Volume is already detached from node.
+		glog.Infof("detach operation was successful. volume %q is already detached from node %v.", volumeID, instanceID)
+		return nil
+	}
 
 	output, err := vm.volumeService.DetachVolumes(&qcservice.DetachVolumesInput{
 		Volumes:  []*string{&volumeID},
@@ -253,6 +266,14 @@ func (vm *volumeManager) DisksAreAttached(volumeIDs []string, instanceID string)
 }
 
 func (vm *volumeManager) GetDefaultVolumeType() VolumeType {
+	if vm.defaultVolumeType == VolumeTypeNone {
+		volumeType, err := autoDetectedVolumeType(vm.qcConfig)
+		if err != nil {
+			glog.Errorf("AutoDetectedVolumeType err: %s", err.Error())
+			return DefaultVolumeType
+		}
+		vm.defaultVolumeType = volumeType
+	}
 	return vm.defaultVolumeType
 }
 
