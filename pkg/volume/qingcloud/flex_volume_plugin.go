@@ -75,19 +75,6 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 	} else {
 		volumeID = pvOrVolumeName
 	}
-	attached, err := p.manager.VolumeIsAttached(volumeID, node)
-	if err != nil {
-		// Log error and continue with detach
-		glog.Errorf(
-			"Error checking if volume (%q) is already attached to current node (%v). Will continue and try detach anyway. err=%v",
-			volumeID, node, err)
-	}
-
-	if err == nil && !attached {
-		// Volume is already detached from node.
-		glog.Infof("detach operation was successful. volume %q is already detached from node %v.", volumeID, node)
-		return flex.NewVolumeSuccess()
-	}
 
 	if err = p.manager.DetachVolume(volumeID, node); err != nil {
 		return flex.NewVolumeError("Error detaching volumeID %q: %v", volumeID, err)
