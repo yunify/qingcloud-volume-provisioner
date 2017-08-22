@@ -139,10 +139,8 @@ func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (strin
 			return "", err
 		}
 		jobID := *output.JobID
-		err = qcclient.WaitJob(vm.jobService, jobID, operationWaitTimeout, waitInterval)
-		if err != nil {
-			return "", err
-		}
+		//ignore wait job error
+		qcclient.WaitJob(vm.jobService, jobID, operationWaitTimeout, waitInterval)
 	}
 
 	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
