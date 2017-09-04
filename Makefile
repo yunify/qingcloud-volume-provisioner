@@ -73,7 +73,7 @@ bin/qingcloud-volume-provisioner                     : $(foreach dir,$(qingcloud
 								go build -o bin/qingcloud-volume-provisioner $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)/cmd/qingcloud-volume-provisioner
 
 bin/qingcloud-flex-volume                            : $(foreach dir,$(qingcloud-flex-volume_pkg),$(wildcard $(dir)/*.go)) Makefile
-								go build -o bin/qingcloud-flex-volume $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)/qingcloud-flex-volume
+								go build -o bin/qingcloud-flex-volume $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)/cmd/qingcloud-flex-volume
 
 bin/qingcloud-flex-volume.tar.gz              : bin/qingcloud-flex-volume
 								tar -C bin/ -czf bin/qingcloud-flex-volume.tar.gz qingcloud-flex-volume
