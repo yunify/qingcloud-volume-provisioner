@@ -53,9 +53,9 @@ GO_BUILD_FLAGS					= -a -tags netgo -installsuffix nocgo -ldflags "$(GO_LDFLAGS)
 
 #src
 qingcloud-volume-provisioner_pkg = $(subst $(GIT_REPOSITORY)/,,$(shell go list -f '{{ join .Deps "\n" }}' $(GIT_REPOSITORY)/cmd/qingcloud-volume-provisioner | grep "^$(GIT_REPOSITORY)" |grep -v "^$(GIT_REPOSITORY)/vendor/" ))
-qingcloud-volume-provisioner_pkg += .
+qingcloud-volume-provisioner_pkg += cmd/qingcloud-volume-provisioner
 qingcloud-flex-volume_pkg = $(subst $(GIT_REPOSITORY)/,,$(shell go list -f '{{ join .Deps "\n" }}' $(GIT_REPOSITORY)/cmd/qingcloud-flex-volume | grep "^$(GIT_REPOSITORY)" |grep -v "^$(GIT_REPOSITORY)/vendor/" ))
-qingcloud-flex-volume_pkg += .
+qingcloud-flex-volume_pkg += cmd/qingcloud-flex-volume
 #TEST_PACKAGES = $(shell go list -f '{{ join .Deps "\n" }}' $(GIT_REPOSITORY) | grep "^$(GIT_REPOSITORY)" |grep -v "^$(GIT_REPOSITORY)/vendor/" )
 #TEST_PACKAGES += $(GIT_REPOSITORY)
 
@@ -76,7 +76,7 @@ bin/qingcloud-flex-volume                            : $(foreach dir,$(qingcloud
 								go build -o bin/qingcloud-flex-volume $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)
 
 bin/qingcloud-flex-volume.tar.gz              : bin/qingcloud-flex-volume
-tar -C bin/ -czf bin/qingcloud-flex-volume.tar.gz qingcloud-flex-volume
+								tar -C bin/ -czf bin/qingcloud-flex-volume.tar.gz qingcloud-flex-volume
 
 bin/.docker-images-build-timestamp                         : bin/qingcloud-volume-provisioner Makefile Dockerfile
 								docker build -q -t $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) -t $(DOCKER_IMAGE_NAME):latest -t dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) -t dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):latest . > bin/.docker-images-build-timestamp
