@@ -1,7 +1,15 @@
-FROM busybox:1.27.1-glibc
+FROM alpine:edge AS build
+RUN apk update
+RUN apk upgrade
+RUN apk add go gcc g++ make git linux-headers bash
+WORKDIR /app
+ENV GOPATH /app
+ADD . /app/src/github.com/yunify/qingcloud-volume-provisioner
+RUN cd /app/src/github.com/yunify/qingcloud-volume-provisioner && rm -rf bin/ && make
 
-COPY bin/qingcloud-volume-provisioner /qingcloud-volume-provisioner
-COPY bin/qingcloud-flex-volume /qingcloud-flex-volume
+FROM alpine:latest
+MAINTAINER calvinyu <calvinyu@yunify.com>
 
-RUN ln -s /qingcloud-volume-provisioner /bin/qingcloud-volume-provisioner
-RUN ln -s /qingcloud-flex-volume /bin/qingcloud-flex-volume
+COPY --from=build /app/src/github.com/yunify/qingcloud-volume-provisioner/bin/qingcloud-volume-provisioner /bin/qingcloud-volume-provisioner
+COPY --from=build /app/src/github.com/yunify/qingcloud-volume-provisioner/bin/qingcloud-flex-volume /bin/qingcloud-flex-volume
+ENV PATH "/bin/qingcloud-volume-provisioner:/bin/qingcloud-flex-volume:$PATH"
