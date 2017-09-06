@@ -85,8 +85,10 @@ release : bin/qingcloud-flex-volume.tar.gz bin/.docker-images-build-timestamp
 
 install-docker                  : bin/.docker-images-build-timestamp
 								docker push $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE)
-								docker push $(DOCKER_IMAGE_NAME):latest
 								docker push dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):$(IMAGE_LABLE)
+
+publish                         : install-docker
+								docker push $(DOCKER_IMAGE_NAME):latest
 								docker push dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):latest
 
 clean                           :
