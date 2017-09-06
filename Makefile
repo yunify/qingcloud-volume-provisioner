@@ -70,24 +70,31 @@ print-%							:
 go-build						: bin/qingcloud-volume-provisioner bin/qingcloud-flex-volume
 
 bin/qingcloud-volume-provisioner                     : $(foreach dir,$(qingcloud-volume-provisioner_pkg),$(wildcard $(dir)/*.go)) Makefile
+								mkdir -p bin
 								go build -o bin/qingcloud-volume-provisioner $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)/cmd/qingcloud-volume-provisioner
 
 bin/qingcloud-flex-volume                            : $(foreach dir,$(qingcloud-flex-volume_pkg),$(wildcard $(dir)/*.go)) Makefile
+								mkdir -p bin
 								go build -o bin/qingcloud-flex-volume $(GO_BUILD_FLAGS) $(GIT_REPOSITORY)/cmd/qingcloud-flex-volume
 
 bin/qingcloud-flex-volume.tar.gz              : bin/qingcloud-flex-volume
 								tar -C bin/ -czf bin/qingcloud-flex-volume.tar.gz qingcloud-flex-volume
 
 bin/.docker-images-build-timestamp                         : bin/qingcloud-volume-provisioner Makefile Dockerfile
-								docker build -q -t $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) -t $(DOCKER_IMAGE_NAME):latest -t dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) -t dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):latest . > bin/.docker-images-build-timestamp
+								docker build -q -t $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) -t dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) . > bin/.docker-images-build-timestamp
 
 release : bin/qingcloud-flex-volume.tar.gz bin/.docker-images-build-timestamp
 
-install-docker                  : bin/.docker-images-build-timestamp
+bin/.docker_label               : bin/.docker-images-build-timestamp
 								docker push $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE)
 								docker push dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):$(IMAGE_LABLE)
+								echo $(DOCKER_IMAGE_NAME):$(IMAGE_LABLE) > bin/.docker_label
 
-publish                         : install-docker
+install-docker                  : bin/.docker_label
+
+publish                         : bin/.docker_label
+								docker tag `cat bin/.docker_label` $(DOCKER_IMAGE_NAME):latest
+								docker tag `cat bin/.docker_label` dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):latest
 								docker push $(DOCKER_IMAGE_NAME):latest
 								docker push dockerhub.qingcloud.com/$(DOCKER_IMAGE_NAME):latest
 

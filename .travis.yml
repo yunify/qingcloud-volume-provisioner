@@ -22,6 +22,7 @@ deploy:
       secure: t8Jxfwx+7rzb5JRfvcskytLJ4qtgJ2QMpyXGw97Wbw4S0sOYm3fORgvJ3y2pe3tXK2YlsLCUPdU6S2QrChU0wkNnqQQMmnr8Z2eBUwSzxPpUOgWI3HPkG9nJVvnx1YCjb6pk9iR2RGofuAuCrAQpKVpKoS+gfUXCE6X6jDQ3VnxSe9c0mMQ9mtsGKvqF8WBTfxjZKyQwYmfgpWYSFG0l/ElFJdD165PGSGiTzczkeianp5NL5K1XkDKY1UrUIGXYOrA1v4i8as4M96qvBRSdvMDfmnvK3MgzMI6JlIXBIacXEBxu+c4N/qrjdSdRPMqYHSBYOklzjwS1IdhZI5rT4bRAOqtk6HJpzLrPOGRHtKGWY6qLzLlyWu7buJmAMgM/VolF9SJm/tJiP8OgIXBPhZNNln0jxdSLjBK/chdrYP+1Fpun1UCSNCzAsOkg1mit5K74Cl/HIFRu83bxCAddhSrGoCCgP5zdYzShEdnJ5u/e/2ArvplezmZvBjbZ6WYTRvAZIvaQZHtn+KhAjEEy0DoG/JklFBOXy9DP9/DYITV+YAiWMwOmgDS4ye/9b25QBv8ncZf7bf0u+NDtPHonajYaY9IL8gzwBfBt/UK4hUsKsTJid9hKUktRRm1XiKPH+Wk0kFvlHyhXojEtFUhamZS/8+aPS/63srnrpdMbaO8=
     file: bin/qingcloud-flex-volume.tar.gz
     skip_cleanup: true
+    overwrite: true
     on:
       repo: yunify/qingcloud-volume-provisioner
       tags: true
