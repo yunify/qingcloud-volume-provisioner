@@ -1,14 +1,16 @@
 package qingcloud
 
 import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/golang/glog"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
 	"k8s.io/kubernetes/pkg/util/exec"
 	"k8s.io/kubernetes/pkg/util/mount"
 	volumeutil "k8s.io/kubernetes/pkg/volume/util"
-	"os"
-	"strings"
-	"time"
 )
 
 const (
@@ -124,6 +126,8 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
 
+	fmt.Println("calvin WaitForAttach volume %s device %s", volumeID, device)
+	glog.Errorf("calvin WaitForAttach volume %s device %s", volumeID, device)
 	if device == "" {
 		return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
 	}
