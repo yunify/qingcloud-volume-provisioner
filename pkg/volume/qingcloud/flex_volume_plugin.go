@@ -32,6 +32,7 @@ type flexVolumePlugin struct {
 }
 
 func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
+	glog.Errorf("calvin NewFlexVolumePlugin")
 	manager, err := newVolumeManager(DefaultQingCloudConfigPath)
 	if err != nil {
 		return nil, err
@@ -40,10 +41,12 @@ func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
 }
 
 func (*flexVolumePlugin) Init() flex.VolumeResult {
+	glog.Errorf("calvin Init")
 	return flex.NewVolumeSuccess()
 }
 
 func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.VolumeResult {
+	glog.Errorf("calvin Attach")
 	volumeID, _ := options[OptionVolumeID].(string)
 	pvOrVolumeName, _ := options[OptionPVorVolumeName].(string)
 	// flexVolumeDriver GetVolumeName is not yet supported,  so PVorVolumeName is pvName, and store pvName to volumeName
@@ -67,6 +70,7 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 }
 
 func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.VolumeResult {
+	glog.Errorf("calvin Detach")
 	var volumeID string
 	var err error
 	if !isVolumeID(pvOrVolumeName) {
@@ -85,6 +89,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 }
 
 func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOptions) flex.VolumeResult {
+	glog.Errorf("calvin MountDevice")
 	fstype, _ := options[OptionFSType].(string)
 	if fstype == "" {
 		fstype = DefaultFSType
@@ -116,6 +121,7 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 }
 
 func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
+	glog.Errorf("calvin UnmountDevice")
 	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := mounter.Unmount(dir)
 	if err != nil {
@@ -154,6 +160,7 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 }
 
 func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeResult {
+	glog.Errorf("calvin GetVolumeName")
 	//TODO to implements this method when k8s 1.8 fix bug: https://github.com/kubernetes/kubernetes/issues/44737
 	//and https://github.com/kubernetes/kubernetes/blob/f39c6087c2b2b473c37618d9cd054d918be0f77a/pkg/volume/flexvolume/plugin.go#L123
 	// implements getvolumename call.
@@ -162,6 +169,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
+	glog.Errorf("calvin IsAttached")
 	volumeID, _ := options[OptionVolumeID].(string)
 	r, err := p.manager.VolumeIsAttached(volumeID, node)
 
