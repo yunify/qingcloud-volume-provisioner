@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/golang/glog"
 	qclogger "github.com/yunify/qingcloud-sdk-go/logger"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
-	"os"
-	"path"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 
 // printResult is a convenient method for printing result of volume operation, and return exit code.
 func printResult(result flex.VolumeResult) int {
+	glog.Infof("calvin printResult")
 	fmt.Printf(result.ToJson())
 	if result.Status == flex.StatusSuccess {
 		glog.Infof("ResponseSuccess: %#v", result.ToJson())
