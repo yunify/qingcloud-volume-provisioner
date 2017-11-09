@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -32,7 +31,7 @@ type flexVolumePlugin struct {
 }
 
 func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
-	glog.Errorf("calvin NewFlexVolumePlugin")
+	glog.V(4).Infof("calvin NewFlexVolumePlugin")
 	manager, err := newVolumeManager(DefaultQingCloudConfigPath)
 	if err != nil {
 		return nil, err
@@ -41,12 +40,12 @@ func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
 }
 
 func (*flexVolumePlugin) Init() flex.VolumeResult {
-	glog.Errorf("calvin Init")
+	glog.V(4).Infof("calvin Init")
 	return flex.NewVolumeSuccess()
 }
 
 func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.VolumeResult {
-	glog.Errorf("calvin Attach")
+	glog.V(4).Infof("calvin Attach")
 	volumeID, _ := options[OptionVolumeID].(string)
 	pvOrVolumeName, _ := options[OptionPVorVolumeName].(string)
 	// flexVolumeDriver GetVolumeName is not yet supported,  so PVorVolumeName is pvName, and store pvName to volumeName
@@ -70,7 +69,7 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 }
 
 func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.VolumeResult {
-	glog.Errorf("calvin Detach")
+	glog.V(4).Infof("calvin Detach")
 	var volumeID string
 	var err error
 	if !isVolumeID(pvOrVolumeName) {
@@ -89,7 +88,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 }
 
 func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOptions) flex.VolumeResult {
-	glog.Errorf("calvin MountDevice")
+	glog.V(4).Infof("calvin MountDevice")
 	fstype, _ := options[OptionFSType].(string)
 	if fstype == "" {
 		fstype = DefaultFSType
@@ -109,8 +108,7 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 			return flex.NewVolumeError(err.Error())
 		}
 	}
-	fmt.Println("calvin MountDevice device %s", device)
-	glog.Errorf("calvin MountDevice device %s", device)
+	glog.V(4).Infof("calvin MountDevice device %s dir %s", device, dir)
 	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := volumeMounter.FormatAndMount(device, dir, fstype, flags)
 	if err != nil {
@@ -121,7 +119,7 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 }
 
 func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
-	glog.Errorf("calvin UnmountDevice")
+	glog.V(4).Infof("calvin UnmountDevice")
 	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := mounter.Unmount(dir)
 	if err != nil {
@@ -133,8 +131,7 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
 
-	fmt.Println("calvin WaitForAttach volume %s device %s", volumeID, device)
-	glog.Errorf("calvin WaitForAttach volume %s device %s", volumeID, device)
+	glog.V(4).Infof("calvin WaitForAttach volume %s device %s", volumeID, device)
 	if device == "" {
 		return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
 	}
@@ -160,7 +157,7 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 }
 
 func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeResult {
-	glog.Errorf("calvin GetVolumeName")
+	glog.V(4).Infof("calvin GetVolumeName")
 	//TODO to implements this method when k8s 1.8 fix bug: https://github.com/kubernetes/kubernetes/issues/44737
 	//and https://github.com/kubernetes/kubernetes/blob/f39c6087c2b2b473c37618d9cd054d918be0f77a/pkg/volume/flexvolume/plugin.go#L123
 	// implements getvolumename call.
@@ -169,7 +166,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
-	glog.Errorf("calvin IsAttached")
+	glog.V(4).Infof("calvin IsAttached")
 	volumeID, _ := options[OptionVolumeID].(string)
 	r, err := p.manager.VolumeIsAttached(volumeID, node)
 
