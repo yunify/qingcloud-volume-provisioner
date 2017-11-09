@@ -104,7 +104,8 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 			return flex.NewVolumeError(err.Error())
 		}
 	}
-
+	fmt.Println("calvin MountDevice device %s", device)
+	glog.Errorf("calvin MountDevice device %s", device)
 	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := volumeMounter.FormatAndMount(device, dir, fstype, flags)
 	if err != nil {
