@@ -71,7 +71,7 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 }
 
 func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.VolumeResult {
-	glog.V(4).Infof("calvin Detach")
+	glog.V(4).Infof("Detach volume %v from node %v", pvOrVolumeName, node)
 	var volumeID string
 	var err error
 	if !isVolumeID(pvOrVolumeName) {

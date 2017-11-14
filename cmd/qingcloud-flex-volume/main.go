@@ -20,7 +20,6 @@ const (
 
 // printResult is a convenient method for printing result of volume operation, and return exit code.
 func printResult(result flex.VolumeResult) int {
-	glog.Infof("calvin printResult")
 	fmt.Printf(result.ToJson())
 	if result.Status == flex.StatusSuccess {
 		glog.Infof("ResponseSuccess: %#v", result.ToJson())
@@ -146,17 +145,16 @@ func mainFunc() int {
 		panic(fmt.Sprintf("mkdir %s err: %s", logDir, err.Error()))
 	}
 
-	//flag.Set("logtostderr", "false")
-	//flag.Set("alsologtostderr", "false")
+	flag.Set("logtostderr", "false")
+	flag.Set("alsologtostderr", "false")
 	flag.Set("log_dir", logDir)
-	//flag.Set("stderrthreshold", "FATAL")
+	flag.Set("stderrthreshold", "FATAL")
 	flag.Set("v", "4")
 	flag.Parse()
 	glog.CopyStandardLogTo("INFO")
 	defer glog.Flush()
 
 	glog.Infof("Call %s driver, args: %#v", qingcloud.FlexDriverName, flag.Args())
-	glog.Infof("calvin test")
 	qclogger.SetOutput(&GlogWriter{})
 
 	if *install {
