@@ -167,7 +167,7 @@ func mainFunc() int {
 	var ret flex.VolumeResult
 	args := flag.Args()
 	if len(args) == 0 {
-		ret = flex.NewVolumeError("Usage: %s init|attach|detach|mountdevice|unmountdevice|waitforattach|getvolumename|isattached|test", os.Args[0])
+		ret = flex.NewVolumeError("Usage: %s init|attach|detach|mountdevice|unmountdevice|waitforattach|getvolumename|isattached", os.Args[0])
 	} else {
 		op := args[0]
 		args = args[1:]
