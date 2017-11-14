@@ -31,7 +31,7 @@ type flexVolumePlugin struct {
 }
 
 func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
-	glog.V(4).Infof("calvin NewFlexVolumePlugin")
+	glog.V(4).Infof("NewFlexVolumePlugin")
 	manager, err := newVolumeManager(DefaultQingCloudConfigPath)
 	if err != nil {
 		return nil, err
@@ -40,12 +40,12 @@ func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
 }
 
 func (*flexVolumePlugin) Init() flex.VolumeResult {
-	glog.V(4).Infof("calvin Init")
+	glog.V(4).Infof("Init")
 	return flex.NewVolumeSuccess()
 }
 
 func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.VolumeResult {
-	glog.V(4).Infof("calvin Attach")
+	glog.V(4).Infof("Attach")
 	volumeID, _ := options[OptionVolumeID].(string)
 	pvOrVolumeName, _ := options[OptionPVorVolumeName].(string)
 	// flexVolumeDriver GetVolumeName is not yet supported,  so PVorVolumeName is pvName, and store pvName to volumeName
@@ -57,7 +57,8 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 	}
 	// VolumeManager.AttachVolume checks if disk is already attached to node and
 	// succeeds in that case, so no need to do that separately.
-	devicePath, err := p.manager.AttachVolume(volumeID, node)
+	_, err := p.manager.AttachVolume(volumeID, node)
+
 	if err != nil {
 		//ignore already attached error
 		if !strings.Contains(err.Error(), "have been already attached to instance") {
@@ -65,7 +66,8 @@ func (p *flexVolumePlugin) Attach(options flex.VolumeOptions, node string) flex.
 			return flex.NewVolumeError("Error attaching volume %q to node %s: %+v", volumeID, node, err)
 		}
 	}
-	return flex.NewVolumeSuccess().WithDevicePath(devicePath)
+
+	return flex.NewVolumeSuccess().WithDevicePath(volumeID)
 }
 
 func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.VolumeResult {
@@ -88,7 +90,6 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 }
 
 func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOptions) flex.VolumeResult {
-	glog.V(4).Infof("calvin MountDevice")
 	fstype, _ := options[OptionFSType].(string)
 	if fstype == "" {
 		fstype = DefaultFSType
@@ -108,7 +109,7 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 			return flex.NewVolumeError(err.Error())
 		}
 	}
-	glog.V(4).Infof("calvin MountDevice device %s dir %s", device, dir)
+	glog.V(4).Infof("MountDevice device %s dir %s", device, dir)
 	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := volumeMounter.FormatAndMount(device, dir, fstype, flags)
 	if err != nil {
@@ -119,7 +120,7 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 }
 
 func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
-	glog.V(4).Infof("calvin UnmountDevice")
+	glog.V(4).Infof("UnmountDevice %v", dir)
 	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
 	err := mounter.Unmount(dir)
 	if err != nil {
@@ -128,10 +129,10 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 	return flex.NewVolumeSuccess()
 }
 
-func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
+func (p *flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
 
-	glog.V(4).Infof("calvin WaitForAttach volume %s device %s", volumeID, device)
+	glog.V(4).Infof("WaitForAttach volume %v device %v", volumeID, device)
 	if device == "" {
 		return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
 	}
@@ -143,21 +144,25 @@ func (*flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions
 		select {
 		case <-ticker.C:
 			glog.V(4).Infof("Checking  volume %q is attached.", volumeID)
-			exists, err := volumeutil.PathExists(device)
+			deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
+			if err != nil {
+				return flex.NewVolumeError("Error locate device by volumeID (%q): %v", volumeID, err)
+			}
+			exists, err := volumeutil.PathExists(deviceOnQingCloud)
 			if err != nil {
 				// Log error, if any, and continue checking periodically.
 				glog.Errorf("Error verifying  volume (%q) is attached: %v", volumeID, err)
 			} else if exists {
 				// A device path has successfully been created for the PD
 				glog.Infof("Successfully found attached  volume %q.", volumeID)
-				return flex.NewVolumeSuccess().WithDevicePath(device)
+				return flex.NewVolumeSuccess().WithDevicePath(deviceOnQingCloud)
 			}
 		}
 	}
 }
 
 func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeResult {
-	glog.V(4).Infof("calvin GetVolumeName")
+	glog.V(4).Infof("GetVolumeName")
 	//TODO to implements this method when k8s 1.8 fix bug: https://github.com/kubernetes/kubernetes/issues/44737
 	//and https://github.com/kubernetes/kubernetes/blob/f39c6087c2b2b473c37618d9cd054d918be0f77a/pkg/volume/flexvolume/plugin.go#L123
 	// implements getvolumename call.
@@ -166,7 +171,7 @@ func (*flexVolumePlugin) GetVolumeName(options flex.VolumeOptions) flex.VolumeRe
 }
 
 func (p *flexVolumePlugin) IsAttached(options flex.VolumeOptions, node string) flex.VolumeResult {
-	glog.V(4).Infof("calvin IsAttached")
+	glog.V(4).Infof("IsAttached")
 	volumeID, _ := options[OptionVolumeID].(string)
 	r, err := p.manager.VolumeIsAttached(volumeID, node)
 
