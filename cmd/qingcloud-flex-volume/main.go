@@ -107,7 +107,7 @@ func handler(op string, args []string) flex.VolumeResult {
 		if len(args) < 3 {
 			return flex.NewVolumeError("mountdevice requires a mount path, a device path and mount options")
 		}
-		ret = volumePlugin.MountDevice(args[0], args[1], ensureVolumeOptions(args[2]))
+		ret = volumePlugin.MountDevice(args[0], _, ensureVolumeOptions(args[2]))
 	case "unmountdevice":
 		if len(args) < 1 {
 			return flex.NewVolumeError("unmountdevice requires a mount path")
@@ -117,7 +117,7 @@ func handler(op string, args []string) flex.VolumeResult {
 		if len(args) < 2 {
 			return flex.NewVolumeError("waitforattach requires a device path and options in json format")
 		}
-		ret = volumePlugin.WaitForAttach(args[0], ensureVolumeOptions(args[1]))
+		ret = volumePlugin.WaitForAttach(_, ensureVolumeOptions(args[1]))
 	case "getvolumename":
 		if len(args) < 1 {
 			return flex.NewVolumeError("getvolumename requires options in json format")

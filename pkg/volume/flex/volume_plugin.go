@@ -3,6 +3,7 @@ package flex
 import (
 	"encoding/json"
 	"fmt"
+
 	"k8s.io/kubernetes/pkg/volume/flexvolume"
 )
 
@@ -26,6 +27,11 @@ func (v VolumeResult) WithDevicePath(devicePath string) VolumeResult {
 
 func (v VolumeResult) WithVolumeName(volumeName string) VolumeResult {
 	v.VolumeName = volumeName
+	return v
+}
+
+func (v VolumeResult) WithV(devicePath string) VolumeResult {
+	v.DevicePath = devicePath
 	return v
 }
 
@@ -57,9 +63,9 @@ type VolumePlugin interface {
 	Init() VolumeResult
 	Attach(options VolumeOptions, node string) VolumeResult
 	Detach(pvOrVolumeName string, node string) VolumeResult
-	MountDevice(dir, device string, options VolumeOptions) VolumeResult
+	MountDevice(dir string, _, options VolumeOptions) VolumeResult
 	UnmountDevice(dir string) VolumeResult
-	WaitForAttach(device string, options VolumeOptions) VolumeResult
+	WaitForAttach(_, options VolumeOptions) VolumeResult
 	GetVolumeName(options VolumeOptions) VolumeResult
 	IsAttached(options VolumeOptions, node string) VolumeResult
 }

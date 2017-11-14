@@ -89,7 +89,18 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 	return flex.NewVolumeSuccess()
 }
 
-func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOptions) flex.VolumeResult {
+/* To solve device path and volume mapping issue(https://github.com/kubernetes/kubernetes/issues/55314),
+   this plugin use volumeID to identify device path by calling qingcloud volume service.
+   as volumeID could be get from volume options, so just skip the first input parm about device data.
+*/
+func (p *flexVolumePlugin) MountDevice(dir string, _, options flex.VolumeOptions) flex.VolumeResult {
+	volumeID, _ := options[OptionVolumeID].(string)
+	deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
+	if err != nil {
+		return flex.NewVolumeError("Error locate device by volumeID (%q): %v", volumeID, err)
+	}
+	glog.V(4).Infof("MountDevice volume %v device %v", volumeID, deviceOnQingCloud)
+
 	fstype, _ := options[OptionFSType].(string)
 	if fstype == "" {
 		fstype = DefaultFSType
@@ -109,12 +120,12 @@ func (*flexVolumePlugin) MountDevice(dir, device string, options flex.VolumeOpti
 			return flex.NewVolumeError(err.Error())
 		}
 	}
-	glog.V(4).Infof("MountDevice device %s dir %s", device, dir)
+	glog.V(4).Infof("MountDevice device %s dir %s", deviceOnQingCloud, dir)
 	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Runner: exec.New()}
-	err := volumeMounter.FormatAndMount(device, dir, fstype, flags)
+	err = volumeMounter.FormatAndMount(deviceOnQingCloud, dir, fstype, flags)
 	if err != nil {
 		os.Remove(dir)
-		return flex.NewVolumeError("FormatAndMount device (%s) dir (%s) ", device, dir, err.Error())
+		return flex.NewVolumeError("FormatAndMount device (%s) dir (%s) ", deviceOnQingCloud, dir, err.Error())
 	}
 	return flex.NewVolumeSuccess()
 }
@@ -129,13 +140,20 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 	return flex.NewVolumeSuccess()
 }
 
-func (p *flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptions) flex.VolumeResult {
+/* To solve device path and volume mapping issue(https://github.com/kubernetes/kubernetes/issues/55314),
+   this plugin use volumeID to identify device path by calling qingcloud volume service.
+   as volumeID could be get from volume options, so just skip the first input parm about device data.
+*/
+func (p *flexVolumePlugin) WaitForAttach(_, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
-
-	glog.V(4).Infof("WaitForAttach volume %v device %v", volumeID, device)
-	if device == "" {
-		return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
+	deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
+	if err != nil {
+		return flex.NewVolumeError("Error locate device by volumeID (%q): %v", volumeID, err)
 	}
+	glog.V(4).Infof("WaitForAttach volume %v device %v", volumeID, deviceOnQingCloud)
+	//if device == "" {
+	//	return flex.NewVolumeError("WaitForAttach failed for  Volume %q: device is empty.", volumeID)
+	//}
 
 	ticker := time.NewTicker(checkSleepDuration)
 	defer ticker.Stop()
@@ -144,10 +162,7 @@ func (p *flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptio
 		select {
 		case <-ticker.C:
 			glog.V(4).Infof("Checking  volume %q is attached.", volumeID)
-			deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
-			if err != nil {
-				return flex.NewVolumeError("Error locate device by volumeID (%q): %v", volumeID, err)
-			}
+
 			exists, err := volumeutil.PathExists(deviceOnQingCloud)
 			if err != nil {
 				// Log error, if any, and continue checking periodically.
@@ -155,7 +170,7 @@ func (p *flexVolumePlugin) WaitForAttach(device string, options flex.VolumeOptio
 			} else if exists {
 				// A device path has successfully been created for the PD
 				glog.Infof("Successfully found attached  volume %q.", volumeID)
-				return flex.NewVolumeSuccess().WithDevicePath(deviceOnQingCloud)
+				return flex.NewVolumeSuccess().WithDevicePath(volumeID)
 			}
 		}
 	}
