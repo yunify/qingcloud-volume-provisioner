@@ -93,7 +93,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
    this plugin use volumeID to identify device path by calling qingcloud volume service.
    as volumeID could be get from volume options, so just skip the first input parm about device data.
 */
-func (p *flexVolumePlugin) MountDevice(dir string, _, options flex.VolumeOptions) flex.VolumeResult {
+func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
 	deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
 	if err != nil {
@@ -144,7 +144,7 @@ func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
    this plugin use volumeID to identify device path by calling qingcloud volume service.
    as volumeID could be get from volume options, so just skip the first input parm about device data.
 */
-func (p *flexVolumePlugin) WaitForAttach(_, options flex.VolumeOptions) flex.VolumeResult {
+func (p *flexVolumePlugin) WaitForAttach(_ string, options flex.VolumeOptions) flex.VolumeResult {
 	volumeID, _ := options[OptionVolumeID].(string)
 	deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
 	if err != nil {
