@@ -3,6 +3,7 @@ package flex
 import (
 	"encoding/json"
 	"fmt"
+
 	"k8s.io/kubernetes/pkg/volume/flexvolume"
 )
 
