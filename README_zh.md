@@ -40,5 +40,6 @@ KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/ho
     create 0644 root root  
 }
 
+**注意：步骤1，2，3，5，6，9是针对所有k8s节点的**
 
 
