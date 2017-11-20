@@ -15,9 +15,9 @@ chmod +x *
 ./qingcloud-flex-volume  --install=true  
 1. Go to QingCloud console and create an API [access key](https://console.qingcloud.com/access_keys/)  
 1. Create the config file /etc/qingcloud/client.yaml, which is used to access QingCloud IaaS resource, example as below:  
-<font color="red">qy_access_key_id: "your access key"</font>  
+<font color=red>qy_access_key_id: "your access key"</font>  
 qy_secret_access_key: "your secret key"  
-zone: "your zone"**  
+zone: "your zone"   
 log_level: warn  
 connection_retries: 1  
 connection_timeout: 5  
