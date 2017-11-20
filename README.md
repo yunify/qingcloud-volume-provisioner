@@ -8,7 +8,7 @@ English|[中文](README_zh.md)
 **qingcloud-volume-provisioner** is a volume plugin deployed on QingCloud. This plugin will handle the volume operations requested from Kubernetes API server. Support IaaS: [QingCloud](http://qingcloud.com).
 
 ### Usage
-1. Download the volume plugin file [qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.1/qingcloud-flex-volume.tar.gz)  
+1. Download the volume plugin file [qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.1/qingcloud-flex-volume.tar.gz)   
 1. Extract the package and grant the extracted file with excuting access:  
 chmod +x *  
 1. Run command as this:  
@@ -39,5 +39,7 @@ KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/ho
     daily  
     create 0644 root root  
 }
+
+**Note: steps 1, 2, 3, 5, 6 and 9 are for all k8s nodes**
 
 
