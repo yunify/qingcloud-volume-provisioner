@@ -8,14 +8,16 @@ English|[中文](README_zh.md)
 **qingcloud-volume-provisioner** is a volume plugin deployed on QingCloud. This plugin will handle the volume operations requested from Kubernetes API server. Support IaaS :[QingCloud](http://qingcloud.com).
 
 ### Usage
-1. Download the volume plugin binary file[qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.1/qingcloud-flex-volume.tar.gz)  
-1. Extract the package and grant the extracted file with excuting access: chmod +x *  
-1. Run command as this: ./qingcloud-flex-volume  --install=true  
+1. Download the volume plugin file [qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.1/qingcloud-flex-volume.tar.gz)  
+1. Extract the package and grant the extracted file with excuting access:  
+chmod +x *  
+1. Run command as this:  
+./qingcloud-flex-volume  --install=true  
 1. Go to QingCloud console and create an API [access key](https://console.qingcloud.com/access_keys/)  
-1. Create the config file /etc/qingcloud/client.yaml, which is used to access QingCloud IaaS resource, example as below:
-**qy_access_key_id: "your access key"**  
-**qy_secret_access_key: "your secret key"**  
-**zone: "your zone"**  
+1. Create the config file /etc/qingcloud/client.yaml, which is used to access QingCloud IaaS resource, example as below:  
+**<font color=red>qy_access_key_id: "your access key"  
+qy_secret_access_key: "your secret key"  
+zone: "your zone"</font>**  
 log_level: warn  
 connection_retries: 1  
 connection_timeout: 5  
