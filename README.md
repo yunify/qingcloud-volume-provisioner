@@ -15,7 +15,7 @@ chmod +x *
 ./qingcloud-flex-volume  --install=true  
 1. Go to QingCloud console and create an API [access key](https://console.qingcloud.com/access_keys/)  
 1. Create the config file /etc/qingcloud/client.yaml, which is used to access QingCloud IaaS resource, example as below:  
-`**qy_access_key_id: "your access key"**  
+**qy_access_key_id: "your access key"**  
 **qy_secret_access_key: "your secret key"**  
 **zone: "your zone"**   
 log_level: warn  
@@ -23,7 +23,7 @@ connection_retries: 1
 connection_timeout: 5  
 host: "api.ks.qingcloud.com"  
 port: 80  
-protocol: "http"`  
+protocol: "http"  
 1. Modify kubelet config file and config volume plugin, example as below:  
 KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/host/node_id"}} --max-pods 60 --feature-gates=AllAlpha=true,DynamicKubeletConfig=false,RotateKubeletServerCertificate=false,RotateKubeletClientCertificate=false --root-dir=/data/var/lib/kubelet --cert-dir=/data/var/run/kubernetes **--enable-controller-attach-detach=true --volume-plugin-dir=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/**", <font color=red>please make sure **KUBELET_EXTRA_ARGS** is added into your kubelet.service file</font>  
 1. Download and deploy volume plugin pod by this config file [qingcloud-volume-provisioner.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/qingcloud-volume-provisioner.yaml), **please modify image version to v1.1**  
