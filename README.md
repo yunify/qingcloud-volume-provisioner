@@ -26,6 +26,8 @@ port: 80
 protocol: "http"  
 1. Modify kubelet config file and config volume plugin, example as below:  
 KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/host/node_id"}} --max-pods 60 --feature-gates=AllAlpha=true,DynamicKubeletConfig=false,RotateKubeletServerCertificate=false,RotateKubeletClientCertificate=false --root-dir=/data/var/lib/kubelet --cert-dir=/data/var/run/kubernetes **--enable-controller-attach-detach=true --volume-plugin-dir=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/**", <font color=red>please make sure **KUBELET_EXTRA_ARGS** is added into your kubelet.service file</font>  
+1. Modify the config file of controller manager, and enable flex volume plugin and related mount configuraiton, refer to [kube-controller-manager.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/kube-controller-manager.yaml
+), you could search with key word 'flex'  
 1. Download and deploy volume plugin pod by this config file [qingcloud-volume-provisioner.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/qingcloud-volume-provisioner.yaml), **please modify image version to v1.1**  
 1. Download and deploy config file for QingCloud storage class as addons: [qingcloud-storage-class-capacity.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class-capacity.yaml) and [qingcloud-storage-class.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class.yaml)  
 1. create logrotatte config file for this volume plugin /etc/logrotate.d/flex-volume  
@@ -40,6 +42,6 @@ KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/ho
     create 0644 root root  
 }
 
-**Note: steps 1, 2, 3, 5, 6 and 9 are for all k8s nodes**
+**Note: steps 1, 2, 3, 5, 6 and 10 are for all k8s nodes**
 
 
