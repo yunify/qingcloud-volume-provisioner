@@ -5,7 +5,17 @@
 NAME= qingcloud-volume-provisioner
 GIT_REPOSITORY= github.com/yunify/qingcloud-volume-provisioner
 DOCKER_IMAGE_NAME?= qingcloud/qingcloud-volume-provisioner
+GOPATH ?= $(HOME)/go/
+BASE= $(GOPATH)/src/$(GIT_REPOSITORY)
+BIN      = $(GOPATH)/bin
 
+export GOPATH
+GO      = go
+GOFMT   = gofmt
+TIMEOUT = 15
+V = 0
+Q = $(if $(filter 1,$V),,@)
+M = $(shell printf "\033[34;1m–\033[0m")
 # Generate vars to be included from external script
 # Allows using bash to generate complex vars, such as project versions
 GENERATE_VERSION_INFO_SCRIPT	= ./generate_version.sh
@@ -61,7 +71,10 @@ qingcloud-flex-volume_pkg += cmd/qingcloud-flex-volume
 
 # default just build binary
 default							: go-build
-
+# Define targets
+TESTPKGS = $(shell env GOPATH=$(GOPATH) $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
+# default just build binary
+all : $(BASE) go-build ; $(info $(M) executable is built ...)
 # target for debugging / printing variables
 print-%							:
 								@echo '$*=$($*)'
@@ -100,5 +113,6 @@ publish                         : bin/.docker_label
 
 clean                           :
 								rm -rf bin/ && if -f bin/.docker-images-build-timestamp then docker rmi `cat bin/.docker-images-build-timestamp`
+
 
 .PHONY							: default all go-build clean release install-docker
