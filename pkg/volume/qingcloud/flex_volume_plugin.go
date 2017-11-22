@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"time"
+        "runtime"
+	"fmt"
 
 	"github.com/golang/glog"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
@@ -33,6 +35,10 @@ type flexVolumePlugin struct {
 func NewFlexVolumePlugin() (flex.VolumePlugin, error) {
 	glog.V(4).Infof("NewFlexVolumePlugin")
 	manager, err := newVolumeManager(DefaultQingCloudConfigPath)
+	
+	buf := make([]byte, 1<<16)
+	runtime.Stack(buf, true)
+	fmt.Printf("%s", buf)
 	if err != nil {
 		return nil, err
 	}
