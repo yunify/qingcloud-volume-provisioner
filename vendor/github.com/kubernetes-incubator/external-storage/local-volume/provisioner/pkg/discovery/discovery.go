@@ -24,6 +24,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/local-volume/provisioner/pkg/common"
 
+	esUtil "github.com/kubernetes-incubator/external-storage/lib/util"
+	"github.com/kubernetes-incubator/external-storage/local-volume/provisioner/pkg/deleter"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubernetes/pkg/api/v1/helper"
 )
@@ -32,12 +34,16 @@ import (
 // It looks for volumes in the directories specified in the discoveryMap
 type Discoverer struct {
 	*common.RuntimeConfig
+	Labels map[string]string
+	// ProcTable is a reference to running processes so that we can prevent PV from being created while
+	// it is being cleaned
+	ProcTable       deleter.ProcTable
 	nodeAffinityAnn string
 }
 
 // NewDiscoverer creates a Discoverer object that will scan through
 // the configured directories and create local PVs for any new directories found
-func NewDiscoverer(config *common.RuntimeConfig) (*Discoverer, error) {
+func NewDiscoverer(config *common.RuntimeConfig, procTable deleter.ProcTable) (*Discoverer, error) {
 	affinity, err := generateNodeAffinity(config.Node)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to generate node affinity: %v", err)
@@ -47,7 +53,20 @@ func NewDiscoverer(config *common.RuntimeConfig) (*Discoverer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to convert node affinity to alpha annotation: %v", err)
 	}
-	return &Discoverer{RuntimeConfig: config, nodeAffinityAnn: tmpAnnotations[v1.AlphaStorageNodeAffinityAnnotation]}, nil
+
+	labelMap := make(map[string]string)
+	for _, labelName := range config.NodeLabelsForPV {
+		labelVal, ok := config.Node.Labels[labelName]
+		if ok {
+			labelMap[labelName] = labelVal
+		}
+	}
+
+	return &Discoverer{
+		RuntimeConfig:   config,
+		Labels:          labelMap,
+		ProcTable:       procTable,
+		nodeAffinityAnn: tmpAnnotations[v1.AlphaStorageNodeAffinityAnnotation]}, nil
 }
 
 func generateNodeAffinity(node *v1.Node) (*v1.NodeAffinity, error) {
@@ -100,6 +119,11 @@ func (d *Discoverer) discoverVolumesAtPath(class string, config common.MountConf
 			continue
 		}
 
+		if d.ProcTable.IsRunning(pvName) {
+			glog.Infof("PV %s is still being cleaned, not going to recreate it", pvName)
+			continue
+		}
+
 		filePath := filepath.Join(config.MountDir, file)
 		volType, err := d.getVolumeType(filePath)
 		if err != nil {
@@ -110,6 +134,10 @@ func (d *Discoverer) discoverVolumesAtPath(class string, config common.MountConf
 		var capacityByte int64
 		switch volType {
 		case common.VolumeTypeBlock:
+			if d.RuntimeConfig.BlockDisabled {
+				glog.Warningf("Block device (%q) PVs are currently disabled", filePath)
+				continue
+			}
 			capacityByte, err = d.VolUtil.GetBlockCapacityByte(filePath)
 			if err != nil {
 				glog.Errorf("Path %q block stats error: %v", filePath, err)
@@ -164,10 +192,11 @@ func (d *Discoverer) createPV(file, class string, config common.MountConfig, cap
 	pvSpec := common.CreateLocalPVSpec(&common.LocalPVConfig{
 		Name:            pvName,
 		HostPath:        outsidePath,
-		Capacity:        capacityByte,
+		Capacity:        roundDownCapacityPretty(capacityByte),
 		StorageClass:    class,
 		ProvisionerName: d.Name,
 		AffinityAnn:     d.nodeAffinityAnn,
+		Labels:          d.Labels,
 	})
 
 	_, err := d.APIUtil.CreatePV(pvSpec)
@@ -176,4 +205,21 @@ func (d *Discoverer) createPV(file, class string, config common.MountConfig, cap
 		return
 	}
 	glog.Infof("Created PV %q for volume at %q", pvName, outsidePath)
+}
+
+// Round down the capacity to an easy to read value.
+func roundDownCapacityPretty(capacityBytes int64) int64 {
+
+	easyToReadUnitsBytes := []int64{esUtil.GiB, esUtil.MiB}
+
+	// Round down to the nearest easy to read unit
+	// such that there are at least 10 units at that size.
+	for _, easyToReadUnitBytes := range easyToReadUnitsBytes {
+		// Round down the capacity to the nearest unit.
+		size := capacityBytes / easyToReadUnitBytes
+		if size >= 10 {
+			return size * easyToReadUnitBytes
+		}
+	}
+	return capacityBytes
 }

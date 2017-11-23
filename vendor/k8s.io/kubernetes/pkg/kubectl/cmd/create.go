@@ -29,7 +29,7 @@ import (
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/kubectl/cmd/util/editor"
 	"k8s.io/kubernetes/pkg/kubectl/resource"
-	"k8s.io/kubernetes/pkg/util/i18n"
+	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
 )
 
 type CreateOptions struct {
@@ -64,7 +64,7 @@ func NewCmdCreate(f cmdutil.Factory, out, errOut io.Writer) *cobra.Command {
 		Long:    createLong,
 		Example: createExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			if cmdutil.IsFilenameEmpty(options.FilenameOptions.Filenames) {
+			if cmdutil.IsFilenameSliceEmpty(options.FilenameOptions.Filenames) {
 				defaultRunFunc := cmdutil.DefaultSubCommandRun(errOut)
 				defaultRunFunc(cmd, args)
 				return
@@ -86,7 +86,7 @@ func NewCmdCreate(f cmdutil.Factory, out, errOut io.Writer) *cobra.Command {
 	cmdutil.AddRecordFlag(cmd)
 	cmdutil.AddDryRunFlag(cmd)
 	cmdutil.AddInclude3rdPartyFlags(cmd)
-	cmd.Flags().StringVarP(&options.Selector, "selector", "l", "", "Selector (label query) to filter on, supports '=', '==', and '!='.")
+	cmd.Flags().StringVarP(&options.Selector, "selector", "l", "", "Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
 
 	// create subcommands
 	cmd.AddCommand(NewCmdCreateNamespace(f, out))
@@ -106,7 +106,7 @@ func NewCmdCreate(f cmdutil.Factory, out, errOut io.Writer) *cobra.Command {
 
 func ValidateArgs(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		return cmdutil.UsageError(cmd, "Unexpected args: %v", args)
+		return cmdutil.UsageErrorf(cmd, "Unexpected args: %v", args)
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func RunCreate(f cmdutil.Factory, cmd *cobra.Command, out, errOut io.Writer, opt
 	if options.EditBeforeCreate {
 		return RunEditOnCreate(f, out, errOut, cmd, &options.FilenameOptions)
 	}
-	schema, err := f.Validator(cmdutil.GetFlagBool(cmd, "validate"), cmdutil.GetFlagString(cmd, "schema-cache-dir"))
+	schema, err := f.Validator(cmdutil.GetFlagBool(cmd, "validate"), cmdutil.GetFlagBool(cmd, "openapi-validation"), cmdutil.GetFlagString(cmd, "schema-cache-dir"))
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func RunEditOnCreate(f cmdutil.Factory, out, errOut io.Writer, cmd *cobra.Comman
 		ChangeCause:        f.Command(cmd, false),
 		Include3rdParty:    cmdutil.GetFlagBool(cmd, "include-extended-apis"),
 	}
-	err := editOptions.Complete(f, out, errOut, []string{})
+	err := editOptions.Complete(f, out, errOut, []string{}, cmd)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func createAndRefresh(info *resource.Info) error {
 // NameFromCommandArgs is a utility function for commands that assume the first argument is a resource name
 func NameFromCommandArgs(cmd *cobra.Command, args []string) (string, error) {
 	if len(args) == 0 {
-		return "", cmdutil.UsageError(cmd, "NAME is required")
+		return "", cmdutil.UsageErrorf(cmd, "NAME is required")
 	}
 	return args[0], nil
 }
@@ -241,8 +241,7 @@ type CreateSubcommandOptions struct {
 	// StructuredGenerator is the resource generator for the object being created
 	StructuredGenerator kubectl.StructuredGenerator
 	// DryRun is true if the command should be simulated but not run against the server
-	DryRun bool
-	// OutputFormat
+	DryRun       bool
 	OutputFormat string
 }
 
@@ -292,7 +291,7 @@ func RunCreateSubcommand(f cmdutil.Factory, cmd *cobra.Command, out io.Writer, o
 	}
 
 	if useShortOutput := options.OutputFormat == "name"; useShortOutput || len(options.OutputFormat) == 0 {
-		cmdutil.PrintSuccess(mapper, useShortOutput, out, mapping.Resource, options.Name, options.DryRun, "created")
+		cmdutil.PrintSuccess(mapper, useShortOutput, out, mapping.Resource, info.Name, options.DryRun, "created")
 		return nil
 	}
 

@@ -1,0 +1,37 @@
+package: github.com/yunify/qingcloud-volume-provisioner
+import:
+- package: github.com/golang/glog
+- package: github.com/kubernetes-incubator/external-storage
+  version: f1eb2a4ddf944fdd35a16e686ae104c1db8753b2
+  subpackages:
+  - lib/controller
+- package: github.com/yunify/qingcloud-sdk-go
+  version: ~2.0.0-alpha.13
+  subpackages:
+  - client
+  - config
+  - logger
+  - service
+- package: k8s.io/api
+  subpackages:
+  - core/v1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/api/resource
+  - pkg/apis/meta/v1
+  - pkg/util/sets
+  - pkg/util/wait
+- package: k8s.io/client-go
+  version: kubernetes-1.8.2 
+  subpackages:
+  - kubernetes
+  - rest
+  - tools/clientcmd
+- package: k8s.io/kubernetes
+  version: v1.8.2
+  subpackages:
+  - pkg/util/mount
+  - pkg/volume
+  - pkg/volume/flexvolume
+  - pkg/volume/util
+

@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
-
 load(
     "@io_bazel_rules_go//go:def.bzl",
     "go_library",
@@ -18,9 +16,8 @@ go_library(
         "puller.go",
         "types.go",
     ],
-    tags = ["automanaged"],
     deps = [
-        "//pkg/kubelet/cadvisor:go_default_library",
+        "//pkg/kubelet/apis/stats/v1alpha1:go_default_library",
         "//pkg/kubelet/container:go_default_library",
         "//pkg/kubelet/events:go_default_library",
         "//pkg/util/parsers:go_default_library",
@@ -42,12 +39,11 @@ go_test(
         "image_manager_test.go",
     ],
     library = ":go_default_library",
-    tags = ["automanaged"],
     deps = [
-        "//pkg/kubelet/cadvisor/testing:go_default_library",
+        "//pkg/kubelet/apis/stats/v1alpha1:go_default_library",
         "//pkg/kubelet/container:go_default_library",
         "//pkg/kubelet/container/testing:go_default_library",
-        "//vendor/github.com/google/cadvisor/info/v2:go_default_library",
+        "//pkg/kubelet/server/stats/testing:go_default_library",
         "//vendor/github.com/stretchr/testify/assert:go_default_library",
         "//vendor/github.com/stretchr/testify/require:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
