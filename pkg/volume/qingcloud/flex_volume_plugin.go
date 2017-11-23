@@ -121,7 +121,8 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 		}
 	}
 	glog.V(4).Infof("MountDevice device %s dir %s", deviceOnQingCloud, dir)
-	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New("")}
+        exec := mount.NewOsExec()
+	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: exec}
 	err = volumeMounter.FormatAndMount(deviceOnQingCloud, dir, fstype, flags)
 	if err != nil {
 		os.Remove(dir)
@@ -132,7 +133,8 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 
 func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 	glog.V(4).Infof("UnmountDevice %v", dir)
-	mounter := &mount.SafeFormatAndMount{Interface: mount.New("")}
+	exec := mount.NewOsExec()
+	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: exec}
 	err := mounter.Unmount(dir)
 	if err != nil {
 		return flex.NewVolumeError(err.Error())
