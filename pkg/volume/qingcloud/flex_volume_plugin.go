@@ -20,6 +20,7 @@ const (
 	OptionVolumeID       = "volumeID"
 
 	DefaultFSType  = "ext4"
+	FSType         = "ext4"
 	FlexDriverName = "qingcloud/flex-volume"
 
 	DefaultQingCloudConfigPath = "/etc/qingcloud/client.yaml"
@@ -121,8 +122,10 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 		}
 	}
 	glog.V(4).Infof("MountDevice device %s dir %s", deviceOnQingCloud, dir)
-        exec := mount.NewOsExec()
+
+	exec := mount.NewOsExec()
 	volumeMounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: exec}
+
 	err = volumeMounter.FormatAndMount(deviceOnQingCloud, dir, fstype, flags)
 	if err != nil {
 		os.Remove(dir)
