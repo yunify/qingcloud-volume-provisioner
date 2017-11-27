@@ -118,10 +118,11 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	flexVolumeConfig[OptionVolumeID] = volumeID
 
 	annFsTypeVal, existed := options.PVC.ObjectMeta.Annotations[annFsType]
+	glog.V(4).Infof("fstype %v is set in annatation and will use it to format volume", annFsTypeVal)
 	if existed {
 		fsType = annFsTypeVal
 	}
-
+	glog.V(2).Infof("calvin %s", fsType)
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        options.PVName,
@@ -138,7 +139,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				FlexVolume: &v1.FlexVolumeSource{
 					Driver:   FlexDriverName,
-					FSType:   fsType,
+					FSType:   "xfs",
 					ReadOnly: false,
 					Options:  flexVolumeConfig,
 				},

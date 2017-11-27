@@ -95,6 +95,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
    as volumeID could be get from volume options, so just skip the first input parm about device data.
 */
 func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions) flex.VolumeResult {
+	glog.V(4).Infof("MountDevice called, options: [%+v]", options)
 	volumeID, _ := options[OptionVolumeID].(string)
 	deviceOnQingCloud, err := p.manager.GetDeviceByVolumeID(volumeID)
 	if err != nil {
@@ -106,6 +107,7 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 	if fstype == "" {
 		fstype = DefaultFSType
 	}
+	fstype = "xfs"
 	readwrite, _ := options[OptionReadWrite].(string)
 	flagstr, _ := options["flags"].(string)
 	flags := []string{}
