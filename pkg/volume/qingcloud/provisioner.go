@@ -26,6 +26,9 @@ const (
 
 	// A PV annotation for the identity of the flexProvisioner that provisioned it
 	annProvisionerId = "Provisioner_Id"
+
+	// fsType from annotation, will override the fstype parameter from storageclass
+	annFsType = "kubernetes.io/fsType"
 )
 
 func NewProvisioner(qcConfigPath string) (controller.Provisioner, error) {
@@ -41,7 +44,7 @@ type volumeProvisioner struct {
 }
 
 func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
-	glog.V(4).Infof("qingcloudVolumeProvisioner Provision called, options: [%+v]", options)
+	glog.V(4).Infof("Qingcloud volume Provisioner Provision called, options: [%+v]", options)
 
 	// TODO: implement PVC.Selector parsing
 	if options.PVC.Spec.Selector != nil {
@@ -62,6 +65,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	volumeOptions := &VolumeOptions{}
 
 	hasSetType := false
+	fsType := DefaultFSType
 	for k, v := range options.Parameters {
 		switch strings.ToLower(k) {
 		case "type":
@@ -72,6 +76,9 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			volumeTypeInt, _ := strconv.Atoi(v)
 			volumeOptions.VolumeType = VolumeType(volumeTypeInt)
 			hasSetType = true
+		case "fstype":
+			glog.V(4).Infof("fstype %v is set by storageclass", v)
+			fsType = v
 		default:
 			return nil, fmt.Errorf("invalid option '%q' for qingcloud-volume-provisioner", k)
 		}
@@ -110,6 +117,13 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	flexVolumeConfig := make(map[string]string)
 	flexVolumeConfig[OptionVolumeID] = volumeID
 
+	annFsTypeVal, existed := options.PVC.ObjectMeta.Annotations[annFsType]
+
+	if existed {
+		glog.V(4).Infof("fstype %v is set in annatation and will use it to format volume", annFsTypeVal)
+		fsType = annFsTypeVal
+	}
+
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        options.PVName,
@@ -126,7 +140,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				FlexVolume: &v1.FlexVolumeSource{
 					Driver:   FlexDriverName,
-					FSType:   DefaultFSType,
+					FSType:   fsType,
 					ReadOnly: false,
 					Options:  flexVolumeConfig,
 				},
