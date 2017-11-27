@@ -107,7 +107,7 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 	if fstype == "" {
 		fstype = DefaultFSType
 	}
-	fstype = "xfs"
+	glog.V(4).Infof("MountDevice fsType is %v", fstype)
 	readwrite, _ := options[OptionReadWrite].(string)
 	flagstr, _ := options["flags"].(string)
 	flags := []string{}
