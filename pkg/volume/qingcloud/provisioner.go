@@ -3,13 +3,14 @@ package qingcloud
 import (
 	"fmt"
 
+	"strconv"
+	"strings"
+
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
-	"strings"
 )
 
 type VolumeType int
@@ -44,7 +45,7 @@ type volumeProvisioner struct {
 }
 
 func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
-	glog.V(4).Infof("qingcloudVolumeProvisioner Provision called, options: [%+v]", options)
+	glog.V(4).Infof("Qingcloud volume Provisioner Provision called, options: [%+v]", options)
 
 	// TODO: implement PVC.Selector parsing
 	if options.PVC.Spec.Selector != nil {
@@ -118,11 +119,12 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 	flexVolumeConfig[OptionVolumeID] = volumeID
 
 	annFsTypeVal, existed := options.PVC.ObjectMeta.Annotations[annFsType]
-	glog.V(4).Infof("fstype %v is set in annatation and will use it to format volume", annFsTypeVal)
+
 	if existed {
+		glog.V(4).Infof("fstype %v is set in annatation and will use it to format volume", annFsTypeVal)
 		fsType = annFsTypeVal
 	}
-	glog.V(2).Infof("calvin %s", fsType)
+
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        options.PVName,
@@ -139,7 +141,7 @@ func (c *volumeProvisioner) Provision(options controller.VolumeOptions) (*v1.Per
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				FlexVolume: &v1.FlexVolumeSource{
 					Driver:   FlexDriverName,
-					FSType:   "xfs",
+					FSType:   fsType,
 					ReadOnly: false,
 					Options:  flexVolumeConfig,
 				},
