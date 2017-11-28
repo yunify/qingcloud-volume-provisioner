@@ -23,11 +23,12 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/pborman/uuid"
+	"github.com/kubernetes-incubator/external-storage/lib/util"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/api/v1/helper"
 )
@@ -90,7 +91,7 @@ func (p *rbdProvisioner) getAccessModes() []v1.PersistentVolumeAccessMode {
 
 // Provision creates a storage asset and returns a PV object representing it.
 func (p *rbdProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
-	if !AccessModesContainedInAll(p.getAccessModes(), options.PVC.Spec.AccessModes) {
+	if !util.AccessModesContainedInAll(p.getAccessModes(), options.PVC.Spec.AccessModes) {
 		return nil, fmt.Errorf("invalid AccessModes %v: only AccessModes %v are supported", options.PVC.Spec.AccessModes, p.getAccessModes())
 	}
 	if options.PVC.Spec.Selector != nil {

@@ -3,13 +3,14 @@ package qingcloud
 import (
 	"fmt"
 
+	"strconv"
+	"strings"
+
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
-	"strings"
 )
 
 type VolumeType int
