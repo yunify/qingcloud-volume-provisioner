@@ -10,6 +10,7 @@ import (
 	qcclient "github.com/yunify/qingcloud-sdk-go/client"
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	qcservice "github.com/yunify/qingcloud-sdk-go/service"
+	"github.com/yunify/qingcloud-sdk-go/utils"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -31,6 +32,7 @@ const (
 
 var (
 	supportVolumeTypes = sets.NewString("0", "2", "3")
+	supportFsTypes     = sets.NewString("ext4", "xfs")
 )
 
 // VolumeOptions specifies capacity and type for a volume.
@@ -144,22 +146,27 @@ func (vm *volumeManager) AttachVolume(volumeID string, instanceID string) (strin
 		//ignore wait job error
 		qcclient.WaitJob(vm.jobService, jobID, operationWaitTimeout, waitInterval)
 	}
-
-	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
-		Volumes: []*string{&volumeID},
-	})
+	var dev *string
+	err = utils.WaitForSpecificOrError(func() (bool, error) {
+		input := &qcservice.DescribeVolumesInput{
+			Volumes: []*string{&volumeID},
+		}
+		output, err := vm.volumeService.DescribeVolumes(input)
+		if err != nil {
+			return false, err
+		}
+		if len(output.VolumeSet) == 0 {
+			return false, fmt.Errorf("volume '%v' miss after attach it", volumeID)
+		}
+		dev = output.VolumeSet[0].Instance.Device
+		if dev == nil || *dev == "" {
+			return false, fmt.Errorf("the device of volume '%v' is empty", volumeID)
+		}
+		return true, nil
+	}, operationWaitTimeout, waitInterval)
 	if err != nil {
 		return "", err
 	}
-	if len(output.VolumeSet) == 0 {
-		return "", fmt.Errorf("volume '%v' miss after attach it", volumeID)
-	}
-
-	dev := output.VolumeSet[0].Instance.Device
-	if dev == nil || *dev == "" {
-		return "", fmt.Errorf("the device of volume '%v' is empty", volumeID)
-	}
-
 	return *dev, nil
 }
 
