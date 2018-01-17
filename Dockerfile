@@ -1,15 +1,16 @@
-FROM alpine:edge AS build
-RUN apk update
-RUN apk upgrade
-RUN apk add go gcc g++ make git linux-headers bash
-WORKDIR /app
-ENV GOPATH /app
-ADD . /app/src/github.com/yunify/qingcloud-volume-provisioner
-RUN cd /app/src/github.com/yunify/qingcloud-volume-provisioner && rm -rf bin/ && make
+# Copyright 2018 Yunify Inc. All rights reserved.
+# Use of this source code is governed by a Apache license
+# that can be found in the LICENSE file.
 
-FROM alpine:latest
-MAINTAINER calvinyu <calvinyu@yunify.com>
+FROM golang:1.9.2-alpine3.6 as builder
 
-COPY --from=build /app/src/github.com/yunify/qingcloud-volume-provisioner/bin/qingcloud-volume-provisioner /bin/qingcloud-volume-provisioner
-COPY --from=build /app/src/github.com/yunify/qingcloud-volume-provisioner/bin/qingcloud-flex-volume /bin/qingcloud-flex-volume
-ENV PATH "/bin/qingcloud-volume-provisioner:/bin/qingcloud-flex-volume:$PATH"
+WORKDIR /go/src/github.com/yunify/qingcloud-volume-provisioner
+COPY . .
+
+RUN go install ./cmd/...
+
+FROM alpine:3.6
+
+LABEL MAINTAINER="calvinyu <calvinyu@yunify.com>"
+
+COPY --from=builder /go/bin/* /usr/local/bin/
