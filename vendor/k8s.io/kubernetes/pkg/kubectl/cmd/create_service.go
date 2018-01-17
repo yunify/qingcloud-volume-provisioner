@@ -25,7 +25,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubectl"
 	"k8s.io/kubernetes/pkg/kubectl/cmd/templates"
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
-	"k8s.io/kubernetes/pkg/util/i18n"
+	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
 )
 
 // NewCmdCreateService is a macro command to create a new service
@@ -83,7 +83,7 @@ func NewCmdCreateServiceClusterIP(f cmdutil.Factory, cmdOut io.Writer) *cobra.Co
 }
 
 func errUnsupportedGenerator(cmd *cobra.Command, generatorName string) error {
-	return cmdutil.UsageError(cmd, "Generator %s not supported. ", generatorName)
+	return cmdutil.UsageErrorf(cmd, "Generator %s not supported. ", generatorName)
 }
 
 // CreateServiceClusterIP implements the behavior to run the create service clusterIP command
@@ -254,7 +254,7 @@ func NewCmdCreateServiceExternalName(f cmdutil.Factory, cmdOut io.Writer) *cobra
 	cmdutil.AddPrinterFlags(cmd)
 	cmdutil.AddGeneratorFlags(cmd, cmdutil.ServiceExternalNameGeneratorV1Name)
 	addPortFlags(cmd)
-	cmd.Flags().String("external-name", "", i18n.T("external name of service"))
+	cmd.Flags().String("external-name", "", i18n.T("External name of service"))
 	cmd.MarkFlagRequired("external-name")
 	return cmd
 }

@@ -1,15 +1,15 @@
 package: github.com/yunify/qingcloud-volume-provisioner
 import:
+- package: github.com/golang/glog
 - package: github.com/kubernetes-incubator/external-storage
-  version: 2a2fad20bb9169eb629477006863a90e0d0b9439
+  version: f1eb2a4ddf944fdd35a16e686ae104c1db8753b2
   subpackages:
   - lib/controller
-  - lib/leaderelection
 - package: github.com/yunify/qingcloud-sdk-go
-  version: v2.0.0-alpha.8
-- package: github.com/sirupsen/logrus
-  version: 1.0.2
-- package: github.com/Sirupsen/logrus
-  repo: git@github.com:/sirupsen/logrus
-  vcs: git
-  version: 1.0.2
+  version: ~2.0.0-alpha.13
+  subpackages:
+  - client
+  - config
+  - logger
+  - service
+
