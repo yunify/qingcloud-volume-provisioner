@@ -6,10 +6,10 @@ import:
   - lib/controller
   - lib/leaderelection
 - package: github.com/yunify/qingcloud-sdk-go
-  version: v2.0.0-alpha.8
+  version: v2.0.0-alpha.10
 - package: github.com/sirupsen/logrus
-  version: 1.0.2
+  version: 1.0.3
 - package: github.com/Sirupsen/logrus
   repo: git@github.com:/sirupsen/logrus
   vcs: git
-  version: 1.0.2
+  version: 1.0.3
