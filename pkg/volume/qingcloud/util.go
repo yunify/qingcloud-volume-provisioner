@@ -1,15 +1,20 @@
+// Copyright 2017 Yunify Inc. All rights reserved.
+// Use of this source code is governed by a Apache license
+// that can be found in the LICENSE file.
+
 package qingcloud
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
+	"time"
+
 	"github.com/golang/glog"
 	qcconfig "github.com/yunify/qingcloud-sdk-go/config"
 	qcservice "github.com/yunify/qingcloud-sdk-go/service"
-	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/volume"
-	"strings"
-	"time"
 )
 
 const (
