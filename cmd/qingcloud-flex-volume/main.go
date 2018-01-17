@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/golang/glog"
 	qclogger "github.com/yunify/qingcloud-sdk-go/logger"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/flex"
 	"github.com/yunify/qingcloud-volume-provisioner/pkg/volume/qingcloud"
-	"os"
-	"path"
 )
 
 const (
@@ -154,7 +155,6 @@ func mainFunc() int {
 	defer glog.Flush()
 
 	glog.Infof("Call %s driver, args: %#v", qingcloud.FlexDriverName, flag.Args())
-
 	qclogger.SetOutput(&GlogWriter{})
 
 	if *install {
