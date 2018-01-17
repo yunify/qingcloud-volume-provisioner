@@ -5,6 +5,7 @@
 package qingcloud
 
 import (
+	"path/filepath"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -119,4 +120,8 @@ func RoundUpVolumeCapacity(capacity resource.Quantity, volumeType VolumeType) (i
 
 func isVolumeID(value string) bool {
 	return strings.HasPrefix(value, "vol-")
+}
+
+func getVolumeName(path string) string {
+	return filepath.Base(path)
 }

@@ -80,7 +80,7 @@ func (p *flexVolumePlugin) Detach(pvOrVolumeName string, node string) flex.Volum
 	var volumeID string
 	var err error
 	if !isVolumeID(pvOrVolumeName) {
-		volumeID, err = p.manager.GetVolumeIDByName(pvOrVolumeName)
+		volumeID, _, err = p.manager.GetVolumeInfoByName(pvOrVolumeName)
 		if err != nil {
 			return flex.NewVolumeError("Error GetVolumeIDByName (%s) : %s", pvOrVolumeName, err.Error())
 		}
@@ -140,13 +140,27 @@ func (p *flexVolumePlugin) MountDevice(dir, _ string, options flex.VolumeOptions
 	return flex.NewVolumeSuccess()
 }
 
-func (*flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
+func (p *flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 	glog.V(4).Infof("UnmountDevice %v", dir)
 	exec := mount.NewOsExec()
 	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: exec}
 	err := mounter.Unmount(dir)
 	if err != nil {
 		return flex.NewVolumeError(err.Error())
+	}
+	volumeName := getVolumeName(dir)
+	volumeID, node , err:= p.manager.GetVolumeInfoByName(volumeName)
+	if err != nil {
+		return flex.NewVolumeError(err.Error())
+	}
+	attached, err := p.manager.VolumeIsAttachedByID(volumeID)
+	if err != nil {
+		return flex.NewVolumeError(err.Error())
+	}
+	if attached {
+		if err = p.manager.DetachVolume(volumeID, node); err != nil {
+			return flex.NewVolumeError("Error detaching volumeID %q: %v", volumeID, err)
+		}
 	}
 	return flex.NewVolumeSuccess()
 }
