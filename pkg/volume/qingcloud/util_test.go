@@ -1,8 +1,13 @@
+// Copyright 2017 Yunify Inc. All rights reserved.
+// Use of this source code is governed by a Apache license
+// that can be found in the LICENSE file.
+
 package qingcloud
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestRoundUpVolumeCapacity(t *testing.T) {
