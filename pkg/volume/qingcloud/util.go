@@ -5,9 +5,9 @@
 package qingcloud
 
 import (
-	"path/filepath"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"time"
 

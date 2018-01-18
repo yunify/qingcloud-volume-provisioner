@@ -272,7 +272,7 @@ func (vm *volumeManager) VolumeIsAttachedByID(volumeID string) (bool, error) {
 	if len(output.VolumeSet) == 0 {
 		return false, nil
 	}
-	return true,nil
+	return true, nil
 }
 
 func (vm *volumeManager) DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error) {

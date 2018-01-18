@@ -149,7 +149,7 @@ func (p *flexVolumePlugin) UnmountDevice(dir string) flex.VolumeResult {
 		return flex.NewVolumeError(err.Error())
 	}
 	volumeName := getVolumeName(dir)
-	volumeID, node , err:= p.manager.GetVolumeInfoByName(volumeName)
+	volumeID, node, err := p.manager.GetVolumeInfoByName(volumeName)
 	if err != nil {
 		return flex.NewVolumeError(err.Error())
 	}
