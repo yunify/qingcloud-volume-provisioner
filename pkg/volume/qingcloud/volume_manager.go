@@ -68,8 +68,8 @@ type VolumeManager interface {
 	// UpdateVolume attribute by volumeID
 	UpdateVolume(volumeID, volumeName string) error
 
-	//GetVolumeIDByName
-	GetVolumeInfoByName(volumeName string) (string, string, error)
+	// Get volume id and related instance id by volume name
+	GetVolumeInfoByName(volumeName string) (volumeID, instanceID string, err error)
 
 	// Check if the volume is already attached to the instance
 	VolumeIsAttached(volumeID string, instanceID string) (bool, error)
@@ -317,8 +317,7 @@ func (vm *volumeManager) UpdateVolume(volumeID, volumeName string) error {
 	return err
 }
 
-// GetVolumeIDByName implements VolumeManager.GetVolumeIDByName
-func (vm *volumeManager) GetVolumeInfoByName(volumeName string) (string, string, error) {
+func (vm *volumeManager) GetVolumeInfoByName(volumeName string) (volumeID, instanceID string, err error) {
 	glog.V(4).Infof("GetVolumeIDByName(%v) called", volumeName)
 
 	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{

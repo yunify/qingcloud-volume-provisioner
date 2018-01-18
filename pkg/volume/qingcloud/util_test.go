@@ -14,7 +14,7 @@ func TestGetVolumeName(t *testing.T) {
 	path := "data/var/lib/kubelet/plugins/kubernetes.io/flexvolume/qingcloud/flex-volume/mounts/pvc-ab52a0f1-fa62-11e7-806e-52541fed8204"
 	volName := getVolumeName(path)
 	if volName != "pvc-ab52a0f1-fa62-11e7-806e-52541fed8204" {
-		t.Errorf("case GetVolumeName: expect %v but get %v", "pvc-ab52a0f1-fa62-11e7-806e-52541fed8204", volName)
+		t.Errorf("case GetVolumeName: expect %v but got %v", "pvc-ab52a0f1-fa62-11e7-806e-52541fed8204", volName)
 	}
 }
 func TestRoundUpVolumeCapacity(t *testing.T) {
