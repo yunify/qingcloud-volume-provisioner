@@ -12,8 +12,16 @@ GO_DOCKER_IMAGE:=golang:1.9.2-alpine3.6
 
 GO:=docker run --rm -it -v `pwd`:/go/src/$(TRAG.Gopkg) -v `pwd`/bin:/go/bin -w /go/src/$(TRAG.Gopkg) $(GO_DOCKER_IMAGE) go
 
-default:
+default: update-version
 	$(GO) install $(TRAG.Gopkg)/cmd/...
+
+build-docker: update-version
+	docker build -t $(TARG.Name) -f ./Dockerfile .
+	@docker image prune -f 1>/dev/null 2>&1
+	@echo "ok"
+
+update-version:
+	go generate ./pkg/volume/qingcloud
 
 clean:
 	-rm -rf ./bin
