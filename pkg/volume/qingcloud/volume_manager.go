@@ -68,12 +68,13 @@ type VolumeManager interface {
 	// UpdateVolume attribute by volumeID
 	UpdateVolume(volumeID, volumeName string) error
 
-	//GetVolumeIDByName
-	GetVolumeIDByName(volumeName string) (string, error)
+	// Get volume id and related instance id by volume name
+	GetVolumeInfoByName(volumeName string) (volumeID, instanceID string, err error)
 
 	// Check if the volume is already attached to the instance
 	VolumeIsAttached(volumeID string, instanceID string) (bool, error)
-
+	// Check if the volume is already attached
+	VolumeIsAttachedByID(volumeID string) (bool, error)
 	// Check if a list of volumes are attached to the node with the specified NodeName
 	DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error)
 
@@ -258,6 +259,22 @@ func (vm *volumeManager) VolumeIsAttached(volumeID string, instanceID string) (b
 	return *output.VolumeSet[0].Instance.InstanceID == instanceID, nil
 }
 
+// VolumeIsAttached implements VolumeManager.VolumeIsAttached
+func (vm *volumeManager) VolumeIsAttachedByID(volumeID string) (bool, error) {
+	glog.V(4).Infof("VolumeIsAttachedByID(%v) called", volumeID)
+
+	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
+		Volumes: []*string{&volumeID},
+	})
+	if err != nil {
+		return false, err
+	}
+	if len(output.VolumeSet) == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (vm *volumeManager) DisksAreAttached(volumeIDs []string, instanceID string) (map[string]bool, error) {
 	glog.V(4).Infof("DisksAreAttached(%v,%v) called", volumeIDs, instanceID)
 
@@ -300,20 +317,19 @@ func (vm *volumeManager) UpdateVolume(volumeID, volumeName string) error {
 	return err
 }
 
-// GetVolumeIDByName implements VolumeManager.GetVolumeIDByName
-func (vm *volumeManager) GetVolumeIDByName(volumeName string) (string, error) {
+func (vm *volumeManager) GetVolumeInfoByName(volumeName string) (volumeID, instanceID string, err error) {
 	glog.V(4).Infof("GetVolumeIDByName(%v) called", volumeName)
 
 	output, err := vm.volumeService.DescribeVolumes(&qcservice.DescribeVolumesInput{
 		SearchWord: &volumeName,
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if len(output.VolumeSet) == 0 {
-		return "", fmt.Errorf("Can not find volume by name: '%v'", volumeName)
+		return "", "", fmt.Errorf("Can not find volume by name: '%v'", volumeName)
 	}
-	return *output.VolumeSet[0].VolumeID, nil
+	return *output.VolumeSet[0].VolumeID, *output.VolumeSet[0].Instance.InstanceID, nil
 }
 func (vm *volumeManager) GetDeviceByVolumeID(volumeID string) (string, error) {
 	glog.V(4).Infof("GetDeviceByVolumeID(%v) called", volumeID)
