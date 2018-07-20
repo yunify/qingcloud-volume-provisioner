@@ -16,6 +16,9 @@ import (
 	qcservice "github.com/yunify/qingcloud-sdk-go/service"
 	"github.com/yunify/qingcloud-sdk-go/utils"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"io/ioutil"
+	"os"
+	"strconv"
 )
 
 const (
@@ -32,6 +35,7 @@ const (
 
 	//DefaultMaxQingCloudVolumes is the limit for volumes attached to an instance.
 	DefaultMaxQingCloudVolumes = 10
+        DriverDir = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
 )
 
 var (
@@ -192,16 +196,23 @@ func (vm *volumeManager) DetachVolume(volumeID string, instanceID string) error 
 		glog.Infof("detach operation was successful. volume %q is already detached from node %v.", volumeID, instanceID)
 		return nil
 	}
-
-	output, err := vm.volumeService.DetachVolumes(&qcservice.DetachVolumesInput{
-		Volumes:  []*string{&volumeID},
-		Instance: &instanceID,
-	})
-	if err != nil {
+	detachLimit, _ := PreDetach(volumeID)
+	if detachLimit <=10 {
+		output, err := vm.volumeService.DetachVolumes(&qcservice.DetachVolumesInput{
+			Volumes:  []*string{&volumeID},
+			Instance: &instanceID,
+		})
+		if err != nil {
+			return err
+		}
+		jobID := *output.JobID
+		err = qcclient.WaitJob(vm.jobService, jobID, operationWaitTimeout, waitInterval)
+		if err == nil {
+			os.Remove(DriverDir + "/" + volumeID)
+		}
 		return err
 	}
-	jobID := *output.JobID
-	err = qcclient.WaitJob(vm.jobService, jobID, operationWaitTimeout, waitInterval)
+
 	return err
 }
 
@@ -345,4 +356,15 @@ func (vm *volumeManager) GetDeviceByVolumeID(volumeID string) (string, error) {
 	}
 
 	return *output.VolumeSet[0].Instance.Device, nil
+}
+func PreDetach(volumeID string) (int, error)  {
+        glog.V(4).Infof("PreDetach(%v) called", volumeID)
+	detachCount, err := ioutil.ReadFile(DriverDir + "/" + volumeID)
+	if err != nil {
+		count := []byte("1")
+		ioutil.WriteFile(DriverDir + "/" + volumeID, count, os.ModeAppend)
+	}
+	asInit, _ := strconv.Atoi(string(detachCount[:]))
+	err = ioutil.WriteFile(DriverDir + "/" + volumeID, []byte(strconv.Itoa(asInit +1)), os.ModeAppend)
+	return asInit, err
 }
