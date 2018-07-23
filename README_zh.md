@@ -28,20 +28,10 @@ protocol: "http"
 KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/host/node_id"}} --max-pods 60 --feature-gates=AllAlpha=true,DynamicKubeletConfig=false,RotateKubeletServerCertificate=false,RotateKubeletClientCertificate=false --root-dir=/data/var/lib/kubelet --cert-dir=/data/var/run/kubernetes **--enable-controller-attach-detach=true --volume-plugin-dir=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/**", <font color=red>请确保 **KUBELET_EXTRA_ARGS** 已被添加到 kubelet.service file</font> 
 1. 修改controller manager的配置文件，打开flex volume相关配置的选项，可以参考 [kube-controller-manager.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/kube-controller-manager.yaml
 ), 通过搜索关键字“flex”找到相关参考配置  
-1. 下载存储插件的配置文件并部署于 k8s [qingcloud-volume-provisioner.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/qingcloud-volume-provisioner.yaml), **请修改镜像版本为 v1.1**  
+1. 下载存储插件的配置文件并部署于 k8s [qingcloud-volume-provisioner.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/qingcloud-volume-provisioner.yaml), **请修改镜像版本为 v1.3.2**  
 1. 以addon方式下载有关青云存储分级的配置文件并部署到 k8s 之上： [qingcloud-storage-class-capacity.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class-capacity.yaml) 和 [qingcloud-storage-class.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class.yaml)  
-1. 为存储插件创建如下的 logrotatte 配置文件 /etc/logrotate.d/flex-volume  
-/var/log/qingcloud-flex-volume/* {  
-    rotate 1  
-    copytruncate  
-    missingok  
-    notifempty  
-    compress  
-    maxsize 10M  
-    daily  
-    create 0644 root root  
-}
 
-**注意：步骤1，2，3，5，6，10是针对所有k8s节点的**
+
+**注意：步骤1，2，3，5，6是针对所有k8s节点的**
 
 
