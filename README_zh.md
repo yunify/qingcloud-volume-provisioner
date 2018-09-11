@@ -8,7 +8,7 @@ QingCloud Volume External Storage Plugins for Kubernetes Provisoners
 **qingcloud-volume-provisioner** 是部署于Kubernetes之上用于访问青云存储服务的插件。通过这个插件可以基于Kubernetes自动完成对青云硬盘的创建，挂载，格式化，卸载和删除等操作。操作对象为青云IaaS平台上面的容量盘，性能盘以及高性能盘: [QingCloud](http://qingcloud.com).
 
 ### 使用说明
-1. 下载存储插件的压缩文件 [qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.1/qingcloud-flex-volume.tar.gz)  
+1. 下载存储插件的压缩文件 [qingcloud-flex-volume.tar.gz](https://pek3a.qingstor.com/k8s-qingcloud/k8s/qingcloud/volume/v1.3.2/qingcloud-flex-volume.tar.gz)  
 1. 解压并赋予解压文件可执行权限：  
 chmod +x *  
 1. 执行如下命令：  
@@ -24,10 +24,12 @@ connection_timeout: 5
 host: "api.ks.qingcloud.com"  
 port: 80  
 protocol: "http"  
+<font color=red>如为私有云环境，请确保api.ks.qingcloud.com可访问，否则请联系青云实施人员</font>  
 1. 修改kubelet配置文件指向青云存储插件  
 KUBELET_EXTRA_ARGS="--node-labels=role={{getv "/host/role"}},node_id={{getv "/host/node_id"}} --max-pods 60 --feature-gates=AllAlpha=true,DynamicKubeletConfig=false,RotateKubeletServerCertificate=false,RotateKubeletClientCertificate=false --root-dir=/data/var/lib/kubelet --cert-dir=/data/var/run/kubernetes **--enable-controller-attach-detach=true --volume-plugin-dir=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/**", <font color=red>请确保 **KUBELET_EXTRA_ARGS** 已被添加到 kubelet.service file</font> 
-1. 修改controller manager的配置文件，打开flex volume相关配置的选项，可以参考 [kube-controller-manager.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/kube-controller-manager.yaml
-), 通过搜索关键字“flex”找到相关参考配置  
+1. 修改controller manager的配置文件，打开flex volume相关配置的选项，参考如下  
+[kube-controller-manager.yaml](deploy/kube-controller-manager.yaml)
+通过搜索关键字“flex”找到相关参考配置，其中 ${HYPERKUBE_VERSION} 替换为当前 k8s 的版本  
 1. 下载存储插件的配置文件并部署于 k8s [qingcloud-volume-provisioner.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/manifests/qingcloud-volume-provisioner.yaml), **请修改镜像版本为 v1.3.2**  
 1. 以addon方式下载有关青云存储分级的配置文件并部署到 k8s 之上： [qingcloud-storage-class-capacity.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class-capacity.yaml) 和 [qingcloud-storage-class.yaml](https://github.com/QingCloudAppcenter/kubernetes/blob/master/k8s/addons/qingcloud/qingcloud-storage-class.yaml)  
 
